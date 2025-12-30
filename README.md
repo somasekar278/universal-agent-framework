@@ -28,13 +28,71 @@ pip install sota-agent-framework[mcp]          # MCP tool calling
 pip install sota-agent-framework[ray]          # Distributed execution
 pip install sota-agent-framework[databricks]    # Databricks integration
 pip install sota-agent-framework[optimization]  # DSPy + TextGrad
+pip install sota-agent-framework[monitoring]    # Health checks & metrics
+pip install sota-agent-framework[web]          # FastAPI service
 pip install sota-agent-framework[all]          # Everything
 
 # Or install from GitHub
 pip install git+https://github.com/somasekar278/universal-agent-template.git
 ```
 
-### Generate Your First Project
+### Choose Your Path
+
+**👉 Pick based on your experience level:**
+
+#### 🎓 **New to Agents? (Beginner)**
+
+```bash
+# Interactive setup with all best practices
+pip install sota-agent-framework[all]
+sota-setup  # Guided wizard walks you through everything
+```
+
+**You get**: Complete project with memory, monitoring, telemetry, experiments - all configured automatically!
+
+#### 🚀 **Some Experience? (Intermediate)**
+
+```bash
+# Quick generation with recommended features
+sota-generate --domain "your_domain" --output ./your-project
+cd your-project
+
+# Get personalized recommendations
+sota-advisor .
+```
+
+**You get**: Production-ready structure + advisor tells you what's missing for your use case.
+
+#### ⚡ **Expert? (Advanced)**
+
+```bash
+# Minimal setup, full control
+pip install sota-agent-framework  # Just core
+# Use only what you need, override everything else
+```
+
+**You get**: Complete freedom. Import à la carte, override any component, access internal APIs.
+
+**📖 See [User Journey Guide](docs/USER_JOURNEY.md) for detailed paths**
+
+---
+
+### 💡 "Do I Need All These Features?"
+
+**NO!** Different use cases need different features. The framework is modular by design.
+
+**Quick Guide:**
+- **Simple Chatbot?** → Core + Services only
+- **Context-Aware?** → Add Memory
+- **Production API?** → Add Monitoring + Telemetry + Experiments
+- **Complex Workflows?** → Add LangGraph + Visualization + Reasoning
+- **Autonomous Agent?** → Use everything!
+
+**📖 See [Feature Selection Guide](docs/FEATURE_SELECTION_GUIDE.md) for detailed recommendations**
+
+---
+
+### Generate Your First Project (Any Level)
 
 ```bash
 # Generate a complete project for your domain
@@ -68,6 +126,323 @@ result = await router.route("your_agent", input_data)  # 2. Execute
 
 **📖 See [Getting Started Guide](GETTING_STARTED.md) for detailed 5-minute guide**
 
+## 🧪 Benchmark Your Agents
+
+The framework includes a **production-grade evaluation suite** for comprehensive agent testing:
+
+```bash
+# Install with benchmarking support
+pip install sota-agent-framework[dev]
+
+# Run benchmarks
+sota-benchmark run --suite fraud --agents all --report md
+
+# View auto-generated leaderboard
+cat benchmark_results/leaderboard.md
+```
+
+**Features:**
+- ✅ Multi-metric evaluation (tool calls, planning, hallucination, latency, coherence, accuracy)
+- 🏆 Auto-generated leaderboards ranking agents
+- 📊 Multiple report formats (Markdown, JSON, HTML)
+- 🔄 Regression testing for CI/CD
+- ⚡ Parallel execution for fast evaluation
+
+**📖 See [Benchmarking Guide](docs/BENCHMARKING.md) for complete documentation**
+
+## 🧠 Agent-Governed Memory System
+
+Intelligent memory management where **agents decide** what to store, retrieve, and forget:
+
+```python
+from memory import MemoryManager, MemoryType, MemoryImportance
+
+# Initialize memory
+memory = MemoryManager()
+
+# Agent stores (auto-detects importance and type)
+await memory.store(
+    content="User prefers dark mode at night",
+    importance=MemoryImportance.HIGH
+)
+
+# Agent retrieves with semantic search
+memories = await memory.retrieve(
+    query="What are user preferences?",
+    strategy="hybrid"  # semantic + recency + importance
+)
+
+# Agent reflects and consolidates
+summary = await memory.reflect()
+
+# Agent forgets old data
+forgotten = await memory.forget()
+```
+
+**Features:**
+- 🧠 **5 Memory Types** - Short-term, long-term, episodic, semantic, procedural
+- 🔍 **Semantic Search** - Vector embeddings for similarity-based retrieval
+- 🤔 **Reflection** - Agents create insights and summaries from memories
+- ⏰ **Smart Forgetting** - Time/importance/capacity-based policies
+- 🔗 **Memory Graphs** - Track relationships and patterns
+- 💬 **Context Budgeting** - Automatic token management for LLMs
+- 🤝 **Shared Memory** - Private and shared memory spaces across agents
+
+**📖 See [Memory System Guide](docs/MEMORY_SYSTEM.md) for complete documentation**
+
+## 🎯 Reasoning Optimization
+
+Advanced reasoning optimization for continuously improving agents:
+
+```python
+from reasoning import ReasoningOptimizer, TrajectoryOptimizer, CoTDistiller
+
+# Initialize optimizer
+optimizer = ReasoningOptimizer(agent)
+
+# Optimize execution
+result = await optimizer.optimize(input_data)
+
+# Learn from execution
+await optimizer.learn_from_execution(
+    trajectory=execution_trajectory,
+    reasoning_chain=agent_reasoning,
+    reward=0.85  # Reward signal
+)
+
+# Get optimization report
+report = optimizer.get_optimization_report()
+```
+
+**Features:**
+- 📊 **Trajectory Optimization** - Learn optimal action sequences from past executions
+- 📉 **CoT Distillation** - Compress reasoning chains (50%+ token savings)
+- 🔄 **Feedback Loops** - Critique → Revise → Retry for self-improvement
+- 🛡️ **Policy Constraints** - Enforce safety, cost, and latency guardrails
+- 🎓 **RL-Style Tuning** - Optimize hyperparameters via reward signals
+
+**📖 See [Reasoning Optimization Guide](docs/REASONING_OPTIMIZATION.md) for complete documentation**
+
+## 🎯 Prompt Optimization (DSPy + TextGrad)
+
+Advanced prompt optimization using **DSPy** for task prompts and **TextGrad** for system prompts:
+
+```python
+from optimization import PromptOptimizer, OptimizationPipeline
+
+# Initialize optimizer
+optimizer = PromptOptimizer()
+
+# Optimize system prompt with TextGrad
+system_result = await optimizer.optimize(
+    prompt="You are a fraud detection expert.",
+    prompt_type="system",
+    evaluation_data=eval_data,
+    objective="Maximize accuracy while being concise"
+)
+
+# Optimize task prompt with DSPy
+task_result = await optimizer.optimize(
+    prompt="Classify the transaction",
+    prompt_type="task",
+    training_data=train_data,
+    task="fraud_detection"
+)
+
+# Run full optimization pipeline
+pipeline = OptimizationPipeline()
+result = await pipeline.run(
+    agent_config=agent_config,
+    training_data=train_data,
+    evaluation_data=eval_data,
+    stages=["system", "task", "test"]
+)
+
+# A/B test variants
+from optimization import ABTestFramework
+
+framework = ABTestFramework()
+test_result = await framework.run_test(
+    variants=[baseline, optimized],
+    test_data=test_cases
+)
+```
+
+**Features:**
+- 🎓 **DSPy Integration** - Few-shot learning for task prompts
+- 📈 **TextGrad Optimization** - Gradient-based system prompt refinement
+- 🔄 **Multi-Stage Pipelines** - System → Task → A/B Test
+- 🧪 **Statistical Testing** - Confidence intervals and significance
+- 📦 **Unity Catalog Integration** - Auto-versioning of optimized prompts
+- 📊 **Performance Tracking** - Optimization history and metrics
+
+**📖 See [Optimization Guide](docs/OPTIMIZATION.md) for complete documentation**
+
+## 📊 Databricks-Native Visualization
+
+Built-in observability and debugging for Databricks notebooks:
+
+```python
+from visualization import DatabricksVisualizer
+
+# Works natively in Databricks notebooks
+viz = DatabricksVisualizer()
+
+# Execution graph (Mermaid diagram)
+viz.show_execution_graph(trace)
+
+# Timeline (Plotly chart)
+viz.show_timeline(trace)
+
+# Tool call replay
+viz.show_tool_calls(tool_calls)
+
+# Decision inspection
+viz.explain_decision(decision, context)
+
+# Log to MLflow
+viz.log_to_mlflow(trace)
+
+# Create interactive widget
+create_databricks_widget(trace)
+```
+
+**Features:**
+- 🎨 **Execution Graphs** - Mermaid diagrams showing agent workflow
+- ⏱️ **Timeline Visualization** - Plotly charts for execution timing
+- 🔧 **Tool Call Replay** - Interactive tool call inspection
+- 🤔 **Decision Explainer** - "Why did the agent do this?"
+- 📝 **Prompt Comparison** - Side-by-side version diffs
+- 📊 **MLflow Integration** - Auto-log visualizations to MLflow
+- 🎛️ **Databricks Widgets** - Interactive notebook controls
+
+**Designed for Databricks:**
+- Uses `displayHTML()` for native rendering
+- Integrates with MLflow UI
+- Works with Databricks widgets
+- Also works in Jupyter/standalone
+
+**📖 See [Visualization Guide](docs/VISUALIZATION.md) for complete documentation**
+
+## 🧪 Experiment Tracking & Feature Flags
+
+Production experiment management with MLflow integration:
+
+```python
+from experiments import ExperimentTracker, FeatureFlagManager, RolloutStrategy
+
+# Track experiments
+tracker = ExperimentTracker()
+
+with tracker.experiment("prompt_v2_test"):
+    result = agent.execute(input_data)
+    tracker.log_metric("accuracy", 0.95)
+
+# Feature flags with gradual rollout
+flags = FeatureFlagManager()
+
+flags.register(
+    "new_memory_system",
+    strategy=RolloutStrategy.PERCENTAGE,
+    percentage=10.0  # 10% rollout
+)
+
+if flags.is_enabled("new_memory_system", user_id="user123"):
+    use_new_system()
+```
+
+**Features:**
+- 🔬 **Experiment Tracking** - Automatic logging to MLflow and Unity Catalog
+- 🚩 **Feature Flags** - Percentage, whitelist, and canary rollouts
+- 📊 **A/B Testing** - Statistical comparison of variants
+- 📈 **Metrics Collection** - Track performance over time
+- 🎯 **Unity Catalog Integration** - Centralized experiment storage
+
+## ❤️ Production Monitoring & Health Checks
+
+Comprehensive monitoring for production deployments:
+
+```python
+from monitoring import HealthCheck, MetricsCollector, AlertManager
+
+# Health checks
+health = HealthCheck()
+status = health.check_all()
+
+# Metrics
+metrics = MetricsCollector()
+metrics.record_latency("agent_execution", 150.5)
+
+# Alerting
+alerts = AlertManager()
+alerts.send_alert(Alert(
+    message="High latency detected",
+    severity=AlertSeverity.WARNING
+))
+```
+
+**Features:**
+- ❤️ **Health Checks** - System, memory, disk, and component health
+- 📊 **Metrics Collection** - Integrated with telemetry system
+- 🚨 **Alerting** - Configurable alerts and notifications
+- 📈 **Performance Monitoring** - Track latency, throughput, errors
+- 🎯 **Production-Ready** - Battle-tested monitoring patterns
+
+## 🌐 Production Services (API & Workers)
+
+FastAPI REST API and background workers:
+
+```python
+from services import AgentAPI, BackgroundWorker
+
+# Start REST API
+api = AgentAPI()
+api.run(host="0.0.0.0", port=8000)
+
+# Background worker
+worker = BackgroundWorker()
+worker.start()
+```
+
+**API Endpoints:**
+- `POST /execute` - Execute agent
+- `GET /health` - Health check
+- `GET /metrics` - Metrics
+- `GET /agents` - List agents
+- WebSocket support for real-time updates
+
+**Features:**
+- 🌐 **FastAPI REST API** - Production HTTP endpoints
+- 🔄 **Background Workers** - Async task processing
+- 🔌 **WebSocket Server** - Real-time agent communication
+- 📊 **Auto-documentation** - OpenAPI/Swagger UI
+- 🛡️ **Production-Ready** - Health checks, metrics, error handling
+
+## 🧪 Comprehensive Test Suite
+
+Full test coverage with pytest:
+
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ --cov=agents --cov=shared --cov-report=html
+
+# Run specific test categories
+pytest tests/test_agents.py -v
+pytest tests/test_memory.py -v
+pytest tests/test_optimization.py -v
+```
+
+**Test Coverage:**
+- ✅ Agent execution and orchestration
+- ✅ Memory system (storage, retrieval, policies)
+- ✅ Optimization (DSPy, TextGrad)
+- ✅ Monitoring (health checks, metrics)
+- ✅ Experiments (tracking, feature flags)
+- ✅ Integration tests with fixtures
+
 ## Why Use This Template?
 
 ✨ **Universal Design** - Works for any domain, not just fraud detection  
@@ -75,8 +450,9 @@ result = await router.route("your_agent", input_data)  # 2. Execute
 ⚙️ **Configuration-Driven** - Enable/disable agents via YAML, zero code changes  
 🎯 **SLA-Aware** - Control inline vs async execution based on your requirements  
 🏗️ **Production-Ready** - Battle-tested patterns, not toy examples  
-📦 **Complete Stack** - Includes telemetry, evaluation, optimization, deployment  
+📦 **Complete Stack** - Telemetry, evaluation, optimization, monitoring, experiments, API services, deployment  
 🚀 **Template Generator** - Scaffold new projects in seconds  
+🧪 **Built-in Benchmarking** - Comprehensive eval suite with leaderboards  
 
 ## Architecture Overview
 
@@ -94,6 +470,7 @@ This project implements a **domain-agnostic, plug-and-play agent framework** tha
 
 🔌 **Plug-and-Play Integration** - Add to existing pipelines with 3 lines of code  
 ⚙️ **Configuration-Driven** - Enable/disable agents via YAML, no code changes  
+🧠 **LangGraph Orchestration** - Plan → Act → Critique → Re-plan loops for autonomous workflows  
 🎯 **SLA-Aware Execution** - Control inline vs offline based on requirements  
 🔒 **Type-Safe** - Pydantic schemas validate all data at runtime  
 🌐 **ASGI Support** - FastAPI endpoints, SSE streaming, async HTTP  
@@ -102,10 +479,15 @@ This project implements a **domain-agnostic, plug-and-play agent framework** tha
 📈 **Prompt Optimization** - DSPy for task prompts, TextGrad for system prompts  
 📊 **Comprehensive Telemetry** - All events streamed to Delta Lake via Zerobus  
 🧠 **Memory Management** - Lakebase for vector embeddings and conversation history  
-🔧 **MCP Tool Integration** - Standardized external tool calling  
+🔧 **MCP Tool Integration** - Standardized external tool calling (v1.25.0+)  
 📉 **MLflow Tracking** - Experiment tracking, evaluation, and model registry  
 🏛️ **Unity Catalog** - Centralized prompt and model versioning  
 🏢 **Multi-Tenant Ready** - Schema adapters handle any customer format  
+🧪 **Agent Benchmarking** - Multi-metric eval suite with auto-generated leaderboards  
+🧠 **Agent-Governed Memory** - Intelligent storage, retrieval, reflection, and forgetting  
+🎯 **Reasoning Optimization** - Trajectory tuning, CoT distillation, feedback loops, RL-style tuning  
+📊 **Databricks-Native Visualization** - Execution graphs, timelines, tool replay, decision inspection  
+⚙️ **YAML-Configurable** - All infrastructure and runtime settings via unified YAML  
 
 ## Project Structure
 

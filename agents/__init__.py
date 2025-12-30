@@ -51,6 +51,14 @@ except ImportError:
     _HAS_MCP = False
     AgentMCPClient = None
 
+# Dynamic tool registry
+from .tool_registry import (
+    DynamicToolRegistry,
+    ToolMetadata,
+    ToolStatus,
+    get_global_registry
+)
+
 __all__ = [
     # Base classes
     "Agent",
@@ -72,6 +80,12 @@ __all__ = [
     # Configuration
     "AgentConfig",
     "AgentConfigError",
+    
+    # Tool Registry
+    "DynamicToolRegistry",
+    "ToolMetadata",
+    "ToolStatus",
+    "get_global_registry",
 ]
 
 # Add MCP client to __all__ only if available

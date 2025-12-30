@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sota-agent-framework"
-version = "0.1.6"
+version = "0.2.3"
 description = "Domain-agnostic agent framework for integrating AI agents into data pipelines"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -78,6 +78,11 @@ mcp = [
     "mcp>=0.1.0",
 ]
 
+# Semantic tool search
+semantic-search = [
+    "sentence-transformers>=2.2.0",
+]
+
 # Message bus
 messaging = [
     "nats-py>=2.6.0",
@@ -91,16 +96,28 @@ telemetry = [
     "opentelemetry-instrumentation>=0.41b0",
 ]
 
-# Web framework
+# Web framework & services
 web = [
     "fastapi>=0.100.0",
     "uvicorn[standard]>=0.23.0",
     "websockets>=12.0",
 ]
 
+# Monitoring
+monitoring = [
+    "psutil>=5.9.0",
+]
+
+# Visualization (Databricks-native)
+ui = [
+    "plotly>=5.0.0",
+    "gradio>=4.0.0",
+    "ipython>=8.0.0",
+]
+
 # All features
 all = [
-    "sota-agent-framework[databricks,agent-frameworks,optimization,ray,mcp,messaging,telemetry,web]",
+    "sota-agent-framework[databricks,agent-frameworks,optimization,ray,mcp,semantic-search,messaging,telemetry,web,ui,monitoring]",
 ]
 
 # Development tools
@@ -122,13 +139,16 @@ Repository = "https://github.com/your-org/sota-agent-framework"
 Issues = "https://github.com/your-org/sota-agent-framework/issues"
 
 [tool.setuptools]
-packages.find = {where = ["."], include = ["agents*", "shared*", "sota_agent*"]}
+packages.find = {where = ["."], include = ["agents*", "shared*", "sota_agent*", "orchestration*", "evaluation*", "memory*", "reasoning*", "optimization*", "visualization*", "telemetry*", "uc_registry*", "infra*", "experiments*", "monitoring*", "services*"]}
 
 [tool.setuptools.package-data]
 "*" = ["py.typed"]
 
 [project.scripts]
 sota-generate = "sota_agent.cli:main"
+sota-benchmark = "sota_agent.benchmark_cli:main"
+sota-setup = "sota_agent.setup_wizard:main"
+sota-advisor = "sota_agent.advisor:main"
 
 [tool.black]
 line-length = 100

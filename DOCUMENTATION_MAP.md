@@ -6,7 +6,10 @@
 
 1. **[README.md](README.md)** - Project overview and features
 2. **[GETTING_STARTED.md](GETTING_STARTED.md)** - 5-minute quick start guide
-3. **[docs/TEMPLATE_GUIDE.md](docs/TEMPLATE_GUIDE.md)** - Comprehensive template usage guide
+3. **[docs/USER_JOURNEY.md](docs/USER_JOURNEY.md)** - Choose your path (Beginner/Intermediate/Advanced)
+4. **[docs/FEATURE_SELECTION_GUIDE.md](docs/FEATURE_SELECTION_GUIDE.md)** - What features do YOU need?
+5. **[docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md)** - Quick reference card
+6. **[docs/TEMPLATE_GUIDE.md](docs/TEMPLATE_GUIDE.md)** - Comprehensive template usage guide
 
 ## 📖 User Documentation
 
@@ -18,7 +21,13 @@
 
 ### Core Framework
 - **[Project Structure](docs/PROJECT_STRUCTURE.md)** - Code organization
-- **[Configuration System](docs/CONFIGURATION_SYSTEM.md)** - YAML configuration
+- **[Configuration System](docs/CONFIGURATION.md)** - Comprehensive YAML configuration
+- **[Memory System](docs/MEMORY_SYSTEM.md)** - Agent-governed memory management
+- **[Reasoning Optimization](docs/REASONING_OPTIMIZATION.md)** - Trajectory tuning, CoT distillation, feedback loops
+- **[Prompt Optimization](docs/OPTIMIZATION.md)** - DSPy & TextGrad for prompt optimization
+- **[Agent Benchmarking](docs/BENCHMARKING.md)** - Comprehensive evaluation & testing
+- **[Visualization](docs/VISUALIZATION.md)** - Databricks-native observability
+- **[LangGraph Integration](docs/LANGGRAPH_INTEGRATION.md)** - Autonomous planning & orchestration
 - **[MCP Integration](docs/MCP_INTEGRATION.md)** - Model Context Protocol integration
 - **[Use Cases](docs/USE_CASES.md)** - Advanced patterns
 
@@ -51,7 +60,14 @@
     ├── TEMPLATE_GUIDE.md         # Complete template guide
     ├── CROSS_DOMAIN_EXAMPLES.md  # 8 domain examples
     ├── PROJECT_STRUCTURE.md      # Code organization
-    ├── CONFIGURATION_SYSTEM.md   # Configuration guide
+    ├── CONFIGURATION.md          # Comprehensive YAML configuration
+    ├── MEMORY_SYSTEM.md          # Agent-governed memory
+    ├── REASONING_OPTIMIZATION.md # Reasoning optimization
+    ├── OPTIMIZATION.md           # Prompt optimization (DSPy/TextGrad)
+    ├── BENCHMARKING.md           # Agent evaluation & benchmarking
+    ├── VISUALIZATION.md          # Databricks-native visualization
+    ├── LANGGRAPH_INTEGRATION.md  # LangGraph orchestration
+    ├── MCP_INTEGRATION.md        # Model Context Protocol
     ├── USE_CASES.md              # Advanced patterns
     ├── DATABRICKS_NATIVE_CHECKLIST.md
     ├── IMPLEMENTATION_ROADMAP.md
@@ -72,10 +88,17 @@
 | I want to... | Read this... |
 |--------------|--------------|
 | **Get started quickly** | [GETTING_STARTED.md](GETTING_STARTED.md) |
+| **Know what features I need** | [Feature Selection Guide](docs/FEATURE_SELECTION_GUIDE.md) |
 | **Generate a project** | [TEMPLATE_GUIDE.md](docs/TEMPLATE_GUIDE.md) |
 | **See examples in my domain** | [CROSS_DOMAIN_EXAMPLES.md](docs/CROSS_DOMAIN_EXAMPLES.md) |
 | **Understand the code structure** | [PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) |
-| **Configure agents** | [CONFIGURATION_SYSTEM.md](docs/CONFIGURATION_SYSTEM.md) |
+| **Configure agents** | [CONFIGURATION.md](docs/CONFIGURATION.md) |
+| **Add memory to agents** | [Memory System](docs/MEMORY_SYSTEM.md) |
+| **Optimize agent reasoning** | [Reasoning Optimization](docs/REASONING_OPTIMIZATION.md) |
+| **Optimize prompts** | [Prompt Optimization](docs/OPTIMIZATION.md) |
+| **Benchmark & evaluate agents** | [BENCHMARKING.md](docs/BENCHMARKING.md) |
+| **Visualize agent execution** | [Visualization](docs/VISUALIZATION.md) |
+| **Build autonomous workflows** | [LangGraph Integration](docs/LANGGRAPH_INTEGRATION.md) |
 | **Use MCP tool calling** | [MCP Integration](docs/MCP_INTEGRATION.md) |
 | **Adapt data schemas** | [Schema Adaptation](docs/schemas/03_SCHEMA_ADAPTATION_GUIDE.md) |
 | **Deploy to Databricks** | [DATABRICKS_NATIVE_CHECKLIST.md](docs/DATABRICKS_NATIVE_CHECKLIST.md) |
@@ -103,7 +126,10 @@
 ## 🛠️ Code Examples
 
 - **Integration Examples**: `examples/plug_and_play_integration.py`
+- **LangGraph Workflows**: `examples/langgraph_planning_workflow.py`
 - **MCP Usage**: `examples/mcp_basic_usage.py`
+- **Benchmark Suites**: `benchmarks/*.yaml`
+- **Benchmark Agents**: `benchmark_agents/*.py`
 - **Config Examples**: `config/agents/*.yaml`
 - **Test Examples**: `tests/`
 - **Agent Base Classes**: `agents/base.py`

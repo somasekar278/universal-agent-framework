@@ -1,0 +1,386 @@
+# SOTA Agent Framework - Master Configuration
+# Single source of truth for all infrastructure and runtime settings
+
+# Environment
+environment: production  # dev, staging, production
+
+# Databricks Configuration
+databricks:
+  workspace:
+    host: ${DATABRICKS_HOST}
+    token: ${DATABRICKS_TOKEN}
+  
+  # Unity Catalog
+  unity_catalog:
+    enabled: true
+    catalog_name: sota_agents
+    schema_name: production
+    
+    volumes:
+      prompts:
+        name: prompts
+        type: MANAGED
+        comment: "Versioned prompts for agents"
+      
+      configs:
+        name: agent_configs
+        type: MANAGED
+        comment: "Agent configuration files"
+      
+      models:
+        name: models
+        type: MANAGED
+        comment: "Model artifacts"
+    
+    tables:
+      telemetry:
+        name: agent_telemetry
+        type: MANAGED
+        partitioned_by: ["date"]
+        comment: "Agent execution telemetry"
+      
+      trajectories:
+        name: agent_trajectories
+        type: MANAGED
+        partitioned_by: ["date", "agent_id"]
+        comment: "Agent trajectories for optimization"
+      
+      evaluations:
+        name: agent_evaluations
+        type: MANAGED
+        comment: "Benchmark evaluation results"
+      
+      memory:
+        name: agent_memory
+        type: MANAGED
+        comment: "Agent memory storage"
+  
+  # Model Serving
+  model_serving:
+    enabled: true
+    endpoints:
+      - name: sota-agent-llm
+        model_name: gpt-4
+        model_version: latest
+        workload_size: Small  # Small, Medium, Large
+        scale_to_zero: true
+        min_replicas: 1
+        max_replicas: 5
+        auto_capture_config:
+          enabled: true
+          catalog_name: sota_agents
+          schema_name: production
+          table_name_prefix: inference_logs
+  
+  # Compute Clusters
+  clusters:
+    agent_cluster:
+      name: sota-agent-cluster
+      spark_version: 13.3.x-scala2.12
+      node_type_id: i3.xlarge
+      driver_node_type_id: i3.xlarge
+      autotermination_minutes: 30
+      autoscale:
+        min_workers: 1
+        max_workers: 8
+      spark_conf:
+        spark.databricks.cluster.profile: serverless
+        spark.databricks.repl.allowedLanguages: python,sql
+      libraries:
+        - pypi:
+            package: sota-agent-framework[all]
+  
+  # Jobs
+  jobs:
+    batch_processing:
+      name: sota-agent-batch-processing
+      cluster: agent_cluster
+      schedule:
+        quartz_cron_expression: "0 0 * * * ?"  # Every hour
+        timezone_id: UTC
+      tasks:
+        - task_key: process_agents
+          entry_point: run_batch
+          timeout_seconds: 3600
+
+# Telemetry Configuration
+telemetry:
+  enabled: true
+  service_name: sota-agent-framework
+  
+  # OpenTelemetry
+  otel:
+    traces:
+      enabled: true
+      sample_rate: 1.0  # 0.0 to 1.0
+      batch_size: 100
+      flush_interval_seconds: 30
+    
+    metrics:
+      enabled: true
+      export_interval_seconds: 60
+    
+    logs:
+      enabled: true
+      level: INFO  # DEBUG, INFO, WARNING, ERROR
+  
+  # Export to Delta Lake
+  exporters:
+    delta_lake:
+      enabled: true
+      catalog: sota_agents
+      schema: production
+      table: agent_telemetry
+      batch_size: 100
+      flush_interval_seconds: 30
+    
+    mlflow:
+      enabled: true
+      tracking_uri: databricks
+      experiment_name: /Users/${USER}/sota-agents
+    
+    console:
+      enabled: false  # Enable for local development
+
+# Unity Catalog Registry
+uc_registry:
+  prompts:
+    catalog: sota_agents
+    schema: production
+    volume: prompts
+    versioning:
+      enabled: true
+      auto_increment: true
+      track_metrics: true
+  
+  models:
+    catalog: sota_agents
+    schema: production
+    registry_name: sota_models
+  
+  configs:
+    catalog: sota_agents
+    schema: production
+    volume: agent_configs
+
+# Memory System
+memory:
+  enabled: true
+  
+  # Short-term memory
+  short_term:
+    capacity: 20
+    ttl_seconds: 3600
+  
+  # Long-term memory
+  long_term:
+    capacity: 10000
+    storage: delta_lake  # delta_lake, volume, external
+    catalog: sota_agents
+    schema: production
+    table: agent_memory
+  
+  # Context window
+  context_window:
+    max_tokens: 8000
+    reservation: 0.2
+  
+  # Reflection
+  reflection:
+    enabled: true
+    interval_hours: 24
+    trigger_count: 100
+  
+  # Forgetting
+  forgetting:
+    enabled: true
+    policies:
+      - type: time_based
+        max_age_days: 30
+      - type: importance_based
+        min_importance: LOW
+      - type: capacity_based
+        threshold: 0.9
+  
+  # Embeddings
+  embeddings:
+    provider: sentence_transformers  # sentence_transformers, openai, databricks
+    model: all-MiniLM-L6-v2
+    cache_enabled: true
+    cache_size: 10000
+
+# Reasoning Optimization
+reasoning:
+  trajectory_optimization:
+    enabled: true
+    library_size: 1000
+  
+  distillation:
+    enabled: true
+    target_compression: 0.5
+    method: importance  # importance, summarization, dspy
+  
+  feedback_loops:
+    enabled: true
+    max_retries: 3
+    min_improvement: 0.1
+  
+  policies:
+    enabled: true
+    cost_limit_tokens: 10000
+    latency_limit_ms: 5000
+  
+  rl_tuning:
+    enabled: true
+    learning_rate: 0.01
+    exploration_rate: 0.1
+    buffer_size: 1000
+
+# Benchmarking
+evaluation:
+  enabled: true
+  
+  benchmark_dir: benchmarks
+  agents_dir: benchmark_agents
+  output_dir: benchmark_results
+  
+  default_metrics:
+    - tool_call_success
+    - plan_correctness
+    - hallucination_rate
+    - latency
+    - coherence
+    - accuracy
+  
+  thresholds:
+    tool_call_success: 0.9
+    plan_correctness: 0.8
+    hallucination_rate: 0.9
+    latency: 0.8
+    coherence: 0.7
+    accuracy: 0.8
+  
+  parallel_execution: false
+  max_workers: 4
+  generate_leaderboard: true
+
+# Visualization
+visualization:
+  enabled: true
+  
+  # Databricks-specific
+  databricks:
+    auto_display: true
+    widget_enabled: true
+  
+  # MLflow integration
+  mlflow:
+    auto_log_viz: true
+    log_on_completion: true
+  
+  # Output formats
+  formats:
+    - mermaid  # Execution graphs
+    - plotly   # Timelines
+    - html     # Interactive dashboards
+
+# Agent Configuration Defaults
+agents:
+  default_execution_mode: ray_task  # in_process, process_pool, ray_task, ray_actor
+  default_priority: NORMAL  # CRITICAL, HIGH, NORMAL, LOW
+  default_timeout: 30
+  
+  # Critical path agents
+  critical_path:
+    execution_mode: in_process
+    priority: CRITICAL
+    timeout: 10
+    sla_ms: 500
+  
+  # Enrichment agents
+  enrichment:
+    execution_mode: ray_task
+    priority: NORMAL
+    timeout: 60
+    async_execution: true
+
+# MLflow
+mlflow:
+  tracking_uri: databricks
+  experiment_name: /Users/${USER}/sota-agents
+  
+  # Auto-logging
+  autolog:
+    enabled: true
+    log_models: true
+    log_input_examples: true
+    log_model_signatures: true
+  
+  # Model registry
+  model_registry:
+    enabled: true
+    registry_uri: databricks-uc
+    default_namespace: sota_agents.production
+
+# Deployment
+deployment:
+  # Package configuration
+  package:
+    name: sota-agent-framework
+    version: 0.2.0
+  
+  # Environment-specific overrides
+  environments:
+    dev:
+      telemetry:
+        otel:
+          traces:
+            sample_rate: 1.0
+        exporters:
+          console:
+            enabled: true
+      
+      databricks:
+        clusters:
+          agent_cluster:
+            autoscale:
+              min_workers: 1
+              max_workers: 2
+    
+    staging:
+      telemetry:
+        otel:
+          traces:
+            sample_rate: 0.5
+      
+      databricks:
+        unity_catalog:
+          catalog_name: sota_agents_staging
+    
+    production:
+      telemetry:
+        otel:
+          traces:
+            sample_rate: 0.1
+      
+      databricks:
+        model_serving:
+          endpoints:
+            - name: sota-agent-llm-prod
+              workload_size: Large
+              scale_to_zero: false
+              min_replicas: 2
+              max_replicas: 10
+
+# Security
+security:
+  # Secrets management
+  secrets:
+    provider: databricks  # databricks, env, vault
+    scope: sota-agents
+  
+  # Access control
+  access_control:
+    enabled: true
+    default_policy: deny
+

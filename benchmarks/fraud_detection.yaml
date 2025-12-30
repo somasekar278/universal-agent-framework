@@ -1,0 +1,242 @@
+name: fraud_detection
+description: Benchmark suite for fraud detection agents
+default_metrics:
+  - tool_call_success
+  - plan_correctness
+  - hallucination_rate
+  - latency
+  - coherence
+  - accuracy
+
+metadata:
+  domain: fraud_detection
+  version: "1.0"
+  author: "SOTA Framework"
+
+test_cases:
+  - id: fraud_001
+    name: High-risk transaction detection
+    input:
+      transaction_id: "TXN_12345"
+      amount: 5000.00
+      merchant: "Electronics Store XYZ"
+      location: "Tokyo, Japan"
+      user_id: "USER_789"
+      previous_transactions: 3
+      avg_transaction_amount: 150.00
+    expected:
+      ground_truth:
+        is_fraud: true
+        risk_score: 0.85
+        reasons:
+          - "Unusual transaction amount"
+          - "New merchant"
+          - "Geographic anomaly"
+      expected_tools:
+        - tool: "analyze_transaction_pattern"
+        - tool: "check_merchant_reputation"
+        - tool: "verify_user_location"
+      expected_plan:
+        required_steps:
+          - "transaction_analysis"
+          - "risk_scoring"
+          - "decision_engine"
+        required_order:
+          - "transaction_analysis"
+          - "risk_scoring"
+      latency_budget_ms: 500
+      required_fields:
+        - is_fraud
+        - risk_score
+        - reasons
+      numeric_ranges:
+        risk_score: [0.0, 1.0]
+      structure:
+        is_fraud: bool
+        risk_score: float
+        reasons: list
+    metrics:
+      - tool_call_success
+      - plan_correctness
+      - hallucination_rate
+      - latency
+      - coherence
+      - accuracy
+    tags:
+      - high_priority
+      - critical_path
+    metadata:
+      severity: critical
+      domain_specific: true
+
+  - id: fraud_002
+    name: Low-risk routine transaction
+    input:
+      transaction_id: "TXN_12346"
+      amount: 45.00
+      merchant: "Coffee Shop ABC"
+      location: "San Francisco, CA"
+      user_id: "USER_789"
+      previous_transactions: 157
+      avg_transaction_amount: 42.00
+    expected:
+      ground_truth:
+        is_fraud: false
+        risk_score: 0.05
+        reasons:
+          - "Normal transaction pattern"
+          - "Known merchant"
+      expected_tools:
+        - tool: "analyze_transaction_pattern"
+      latency_budget_ms: 300
+      required_fields:
+        - is_fraud
+        - risk_score
+      numeric_ranges:
+        risk_score: [0.0, 1.0]
+    metrics:
+      - accuracy
+      - latency
+      - coherence
+    tags:
+      - low_priority
+      - routine
+
+  - id: fraud_003
+    name: Card testing attack
+    input:
+      transaction_id: "TXN_12347"
+      amount: 1.00
+      merchant: "Online Store 123"
+      location: "Multiple locations"
+      user_id: "USER_456"
+      previous_transactions: 0
+      transaction_frequency: 15
+      time_window: "5 minutes"
+    expected:
+      ground_truth:
+        is_fraud: true
+        risk_score: 0.95
+        fraud_type: "card_testing"
+        reasons:
+          - "Multiple small transactions"
+          - "High frequency"
+          - "New user"
+      expected_tools:
+        - tool: "detect_velocity_pattern"
+        - tool: "analyze_card_testing"
+      expected_plan:
+        required_steps:
+          - "velocity_check"
+          - "pattern_analysis"
+          - "risk_scoring"
+      latency_budget_ms: 400
+      required_fields:
+        - is_fraud
+        - risk_score
+        - fraud_type
+    metrics:
+      - tool_call_success
+      - plan_correctness
+      - accuracy
+      - latency
+    tags:
+      - high_priority
+      - attack_pattern
+    metadata:
+      severity: critical
+      attack_type: automated
+
+  - id: fraud_004
+    name: Account takeover scenario
+    input:
+      transaction_id: "TXN_12348"
+      user_id: "USER_999"
+      login_location: "Russia"
+      previous_login_location: "USA"
+      password_changed: true
+      email_changed: true
+      transaction_amount: 2500.00
+      shipping_address_changed: true
+    expected:
+      ground_truth:
+        is_fraud: true
+        risk_score: 0.98
+        fraud_type: "account_takeover"
+        reasons:
+          - "Geographic anomaly"
+          - "Multiple account changes"
+          - "High-value transaction"
+      expected_tools:
+        - tool: "detect_account_takeover"
+        - tool: "verify_user_identity"
+        - tool: "check_behavioral_biometrics"
+      expected_plan:
+        required_steps:
+          - "account_change_analysis"
+          - "identity_verification"
+          - "risk_assessment"
+        required_order:
+          - "account_change_analysis"
+          - "identity_verification"
+          - "risk_assessment"
+      latency_budget_ms: 600
+      required_fields:
+        - is_fraud
+        - risk_score
+        - fraud_type
+        - recommended_action
+    metrics:
+      - tool_call_success
+      - plan_correctness
+      - hallucination_rate
+      - accuracy
+      - latency
+    tags:
+      - critical
+      - account_security
+    metadata:
+      severity: critical
+      requires_immediate_action: true
+
+  - id: fraud_005
+    name: Synthetic identity fraud
+    input:
+      user_id: "USER_NEW_001"
+      ssn: "XXX-XX-1234"
+      credit_score: 0
+      account_age_days: 1
+      transaction_amount: 8000.00
+      shipping_address: "Mail drop location"
+      phone_verification: failed
+    expected:
+      ground_truth:
+        is_fraud: true
+        risk_score: 0.92
+        fraud_type: "synthetic_identity"
+        reasons:
+          - "No credit history"
+          - "Suspicious address"
+          - "Failed verification"
+      expected_tools:
+        - tool: "verify_identity"
+        - tool: "check_credit_bureau"
+        - tool: "analyze_identity_coherence"
+      latency_budget_ms: 1000
+      required_fields:
+        - is_fraud
+        - risk_score
+        - fraud_type
+      numeric_ranges:
+        risk_score: [0.0, 1.0]
+    metrics:
+      - tool_call_success
+      - hallucination_rate
+      - accuracy
+      - coherence
+    tags:
+      - complex
+      - identity_fraud
+    metadata:
+      requires_manual_review: true
+
