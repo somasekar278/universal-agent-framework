@@ -408,6 +408,71 @@ mypy>=1.0.0
 """
 
 
+GITIGNORE_TEMPLATE = """# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# OS
+Thumbs.db
+
+# Generated/temporary
+temp/
+tmp/
+"""
+
+
 def to_snake_case(text: str) -> str:
     """Convert text to snake_case."""
     import re
@@ -487,6 +552,7 @@ def generate_project(
         examples_dir / "example_usage.py": EXAMPLE_USAGE_TEMPLATE.format(**context),
         output_path / "README.md": README_TEMPLATE.format(**context),
         output_path / "requirements.txt": REQUIREMENTS_TEMPLATE.format(**context),
+        output_path / ".gitignore": GITIGNORE_TEMPLATE,
     }
     
     for file_path, content in files.items():

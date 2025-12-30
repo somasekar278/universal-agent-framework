@@ -13,18 +13,24 @@ Originally designed for fraud detection, this architecture template applies to *
 - 📊 Analytics & Report Generation
 - 🤖 **Any Agent-Powered Workflow**
 
-## 🚀 Quick Start (Choose Your Path)
+## 🚀 Quick Start
 
-### Path 1: Generate New Project (5 minutes)
+### One-Time Setup (30 seconds)
+
+```bash
+# Install framework (do this once)
+pip install -r requirements.txt
+pip install -e .
+```
+
+### Generate Projects (Anytime)
 
 ```bash
 # Generate a complete project for your domain
 python template_generator.py --domain "your_domain" --output ./your-project
 
 cd your-project
-pip install -r requirements.txt
-# Edit your_domain/agents.py and implement your logic
-python examples/example_usage.py
+python examples/example_usage.py  # Works immediately! ✅
 ```
 
 ### Path 2: Integrate Into Existing Code (3 lines)

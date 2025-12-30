@@ -8,6 +8,18 @@ A universal template for integrating AI agents into applications and data pipeli
 
 **Works for:** Fraud detection • Customer support • Content moderation • Healthcare • Data quality • Security • **Any domain**
 
+## ⚡ One-Time Setup (30 seconds)
+
+**Before generating projects, install the framework:**
+
+```bash
+cd "/path/to/SOTA Agent Framework"  # Or wherever you cloned it
+pip install -r requirements.txt
+pip install -e .
+```
+
+**That's it!** Now the template generator works seamlessly. ✅
+
 ## Quick Start (Choose One)
 
 ### Option 1: Generate New Project (Fastest)
