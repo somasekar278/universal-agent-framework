@@ -1,12 +1,8 @@
 """Command-line interface for SOTA Agent Framework."""
 
-import sys
 import argparse
-from pathlib import Path
-
-# Import the generator function
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from template_generator import generate_project
+import sys
+from .generator import generate_project
 
 
 def main():
@@ -61,7 +57,7 @@ For more information, visit: https://github.com/somasekar278/universal-agent-tem
     parser.add_argument(
         "--version",
         action="version",
-        version="SOTA Agent Framework 0.1.0"
+        version="SOTA Agent Framework 0.1.2"
     )
     
     args = parser.parse_args()
