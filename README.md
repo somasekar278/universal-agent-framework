@@ -101,19 +101,19 @@ from orchestration import AgentWorkflowGraph
 
 Built on industry-leading technologies for production-grade AI agents:
 
-| Component | Technology |
-|-----------|-----------|
-| **LLM Inference** | Databricks Model Serving |
-| **Orchestration** | LangGraph + Databricks Workflows |
-| **Tracing & Evaluation** | Databricks MLflow |
-| **Memory/Vector Store** | Lakebase |
-| **Telemetry Sink** | Zerobus → Delta Lake |
-| **Prompt Registry** | Unity Catalog Volumes |
-| **Prompt Optimization** | DSPy + TextGrad |
-| **Agent Communication** | A2A Protocol (Official) |
-| **Tool Integration** | Model Context Protocol (MCP) |
-| **Dashboards** | Databricks SQL |
-| **Compute** | Databricks Clusters / Serverless |
+| Component | Technology | Production Config |
+|-----------|-----------|-------------------|
+| **Agent Runtime** | Databricks Apps (hot pools) | `min_instances: 2`, `scale_to_zero: false` |
+| **LLM Inference** | Databricks Model Serving | Always-on (no scale-to-zero) |
+| **Orchestration** | LangGraph + Databricks Workflows | Plan → Act → Critique loops |
+| **Agent Memory** | Lakebase + Delta Lake (UC) | Async vector + metadata queries |
+| **A2A Transport** | FastAPI/Starlette (in container) | JSON-RPC 2.0, peer-to-peer |
+| **MCP Servers** | FastAPI/Starlette (in container) | Tool/resource discovery |
+| **Telemetry** | OTEL → ZeroBus → Delta Lake | Batch writes (10s/1000 events) |
+| **Prompt Registry** | Unity Catalog Volumes | Version-controlled, auto-refresh |
+| **Prompt Optimization** | DSPy + TextGrad (offline jobs) | Scheduled (nightly), no runtime overhead |
+| **Tracing & Evaluation** | Databricks MLflow | Experiment tracking, model registry |
+| **Dashboards** | Databricks SQL | Real-time agent metrics |
 
 ---
 
