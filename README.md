@@ -96,6 +96,26 @@ from orchestration import AgentWorkflowGraph
 
 ---
 
+## 🏗️ Technology Stack
+
+Built on industry-leading technologies for production-grade AI agents:
+
+| Component | Technology |
+|-----------|-----------|
+| **LLM Inference** | Databricks Model Serving |
+| **Orchestration** | LangGraph + Databricks Workflows |
+| **Tracing & Evaluation** | Databricks MLflow |
+| **Memory/Vector Store** | Lakebase |
+| **Telemetry Sink** | Zerobus → Delta Lake |
+| **Prompt Registry** | Unity Catalog Volumes |
+| **Prompt Optimization** | DSPy + TextGrad |
+| **Agent Communication** | A2A Protocol (Official) |
+| **Tool Integration** | Model Context Protocol (MCP) |
+| **Dashboards** | Databricks SQL |
+| **Compute** | Databricks Clusters / Serverless |
+
+---
+
 ## 📦 Use Cases
 
 **Works for any agent workflow:**
@@ -117,8 +137,9 @@ from orchestration import AgentWorkflowGraph
 3. **[Feature Selection](docs/FEATURE_SELECTION.md)** - Which features do YOU need?
 
 **Core Guides:**
-- **[Configuration](docs/CONFIGURATION.md)** - Complete YAML configuration
-- **[Integrations](docs/INTEGRATIONS.md)** - MCP, LangGraph, Databricks
+- **[Architecture Advisor](docs/ARCHITECTURE_ADVISOR.md)** - AI-powered recommendations
+- **[Learning Path](docs/LEARNING_PATH.md)** - Learn by building (5 levels)
+- **[Integrations](docs/INTEGRATIONS.md)** - MCP, LangGraph, Databricks, A2A
 - **[Advanced Features](docs/ADVANCED_FEATURES.md)** - Memory, Reasoning, Optimization, Benchmarking
 
 **Quick Links:**
