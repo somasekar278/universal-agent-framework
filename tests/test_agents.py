@@ -6,7 +6,7 @@ Tests for core agent functionality.
 
 import pytest
 from agents.base import Agent, CriticalPathAgent, EnrichmentAgent
-from shared.schemas.base import AgentInput, AgentOutput
+from shared.schemas import AgentInput, AgentOutput
 
 
 class TestAgent(Agent):

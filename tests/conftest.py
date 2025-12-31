@@ -5,6 +5,9 @@ Shared pytest fixtures for all tests.
 """
 
 import pytest
+import tempfile
+import shutil
+from pathlib import Path
 from typing import Dict, Any
 
 
@@ -69,10 +72,10 @@ def mock_llm_response():
 async def async_agent():
     """Async agent fixture."""
     from agents.base import Agent
-    from shared.schemas.base import AgentInput, AgentOutput
+    from shared.schemas import AgentInput, AgentOutput
     
     class TestAgent(Agent):
-        async def execute(self, input_data: AgentInput) -> AgentOutput:
+        async def process(self, input_data: AgentInput) -> AgentOutput:
             return AgentOutput(
                 agent_name="test",
                 result={"status": "success"},
@@ -91,6 +94,72 @@ def setup_test_environment():
     print("\n✅ Test environment cleaned up")
 
 
+# Temporary directory fixtures
+@pytest.fixture
+def temp_dir():
+    """Create a temporary directory for tests."""
+    temp_path = tempfile.mkdtemp()
+    yield Path(temp_path)
+    shutil.rmtree(temp_path, ignore_errors=True)
+
+
+@pytest.fixture
+def temp_config_file(temp_dir):
+    """Create a temporary config file."""
+    config_path = temp_dir / "test_config.yaml"
+    config_content = """
+agents:
+  test_agent:
+    type: critical_path
+    execution_mode: in_process
+    timeout: 30
+"""
+    config_path.write_text(config_content)
+    return config_path
+
+
+# Schema fixtures
+@pytest.fixture
+def chat_input():
+    """Sample ChatInput for testing."""
+    from shared.schemas.learning import ChatInput
+    return ChatInput(
+        question="What is AI?",
+        user_id="test_user"
+    )
+
+
+@pytest.fixture
+def api_request():
+    """Sample APIRequest for testing."""
+    from shared.schemas.learning import APIRequest
+    return APIRequest(
+        endpoint="/api/test",
+        data={"test": "data"},
+        request_id="test_123"
+    )
+
+
+# Agent fixtures
+@pytest.fixture
+def mock_agent_router():
+    """Mock AgentRouter for testing."""
+    from agents.registry import AgentRouter
+    return AgentRouter()
+
+
+@pytest.fixture
+def sample_architect_brief():
+    """Sample architecture brief."""
+    return """
+    Build a production-ready chatbot that:
+    - Remembers conversation history
+    - Has 99.9% uptime
+    - Scales to handle 10K concurrent users
+    - Includes monitoring and alerting
+    """
+
+
 # pytest configuration
 def pytest_configure(config):
     """Configure pytest."""
@@ -99,5 +168,17 @@ def pytest_configure(config):
     )
     config.addinivalue_line(
         "markers", "integration: marks tests as integration tests"
+    )
+    config.addinivalue_line(
+        "markers", "unit: marks tests as unit tests"
+    )
+    config.addinivalue_line(
+        "markers", "cli: marks tests as CLI tests"
+    )
+    config.addinivalue_line(
+        "markers", "requires_api: marks tests that require API access"
+    )
+    config.addinivalue_line(
+        "markers", "requires_databricks: marks tests that require Databricks"
     )
 
