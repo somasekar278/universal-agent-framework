@@ -41,6 +41,47 @@ class DocumentParser:
     """
     
     @staticmethod
+    def validate_file(file_path: str) -> tuple[bool, str]:
+        """
+        Validate file before parsing.
+        
+        Returns:
+            (is_valid, error_message)
+        """
+        path = Path(file_path)
+        
+        # Check if file exists
+        if not path.exists():
+            return False, f"File not found: {file_path}"
+        
+        # Check if it's a file (not directory)
+        if not path.is_file():
+            return False, f"Path is not a file: {file_path}"
+        
+        # Check file size (warn if too large > 10MB)
+        file_size = path.stat().st_size
+        if file_size > 10 * 1024 * 1024:  # 10MB
+            return False, (
+                f"File is very large ({file_size / (1024*1024):.1f} MB). "
+                "Consider using a smaller document or extracting key sections."
+            )
+        
+        # Check if file is empty
+        if file_size == 0:
+            return False, "File is empty (0 bytes)"
+        
+        # Check file extension
+        suffix = path.suffix.lower()
+        supported = ['.txt', '.md', '.markdown', '.rst', '.pdf', '.docx', '.doc']
+        if suffix not in supported:
+            return False, (
+                f"Unsupported file format: {suffix}\n"
+                f"Supported: {', '.join(supported)}"
+            )
+        
+        return True, ""
+    
+    @staticmethod
     def parse_file(file_path: str) -> str:
         """
         Parse a file and extract text content.
@@ -53,13 +94,17 @@ class DocumentParser:
             
         Raises:
             FileNotFoundError: If file doesn't exist
-            ValueError: If file format is unsupported
+            ValueError: If file format is unsupported or file is invalid
         """
+        # Validate file first
+        is_valid, error_msg = DocumentParser.validate_file(file_path)
+        if not is_valid:
+            if "not found" in error_msg.lower():
+                raise FileNotFoundError(error_msg)
+            else:
+                raise ValueError(error_msg)
+        
         path = Path(file_path)
-        
-        if not path.exists():
-            raise FileNotFoundError(f"File not found: {file_path}")
-        
         suffix = path.suffix.lower()
         
         # Plain text and markdown
@@ -83,13 +128,30 @@ class DocumentParser:
     @staticmethod
     def _parse_text(path: Path) -> str:
         """Parse plain text or markdown file."""
-        try:
-            with open(path, 'r', encoding='utf-8') as f:
-                return f.read()
-        except UnicodeDecodeError:
-            # Try with different encoding
-            with open(path, 'r', encoding='latin-1') as f:
-                return f.read()
+        # Try different encodings
+        encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
+        
+        for encoding in encodings:
+            try:
+                with open(path, 'r', encoding=encoding) as f:
+                    content = f.read()
+                    
+                    # Check if file is empty
+                    if not content.strip():
+                        raise ValueError("File is empty or contains only whitespace.")
+                    
+                    return content
+                    
+            except UnicodeDecodeError:
+                continue
+            except Exception as e:
+                raise RuntimeError(f"Error reading file: {str(e)}")
+        
+        # If all encodings failed
+        raise ValueError(
+            "Unable to decode file. It may be binary or use an unsupported encoding.\n"
+            "Try converting to UTF-8 first."
+        )
     
     @staticmethod
     def _parse_pdf(path: Path) -> str:
@@ -97,21 +159,61 @@ class DocumentParser:
         try:
             import PyPDF2
         except ImportError:
-            return (
-                "❌ PDF parsing requires PyPDF2.\n"
+            raise ImportError(
+                "PDF parsing requires PyPDF2.\n"
                 "Install with: pip install PyPDF2\n"
                 "Or: pip install sota-agent-framework[documents]"
             )
         
         try:
             text_parts = []
+            
             with open(path, 'rb') as f:
                 reader = PyPDF2.PdfReader(f)
-                for page in reader.pages:
-                    text_parts.append(page.extract_text())
-            return '\n'.join(text_parts)
+                
+                # Check if PDF is encrypted
+                if reader.is_encrypted:
+                    # Try empty password first
+                    try:
+                        reader.decrypt('')
+                    except:
+                        raise ValueError(
+                            "PDF is password-protected. Please provide an unencrypted version."
+                        )
+                
+                # Check if PDF has pages
+                if len(reader.pages) == 0:
+                    raise ValueError("PDF has no pages or is empty.")
+                
+                # Extract text from each page
+                for page_num, page in enumerate(reader.pages, 1):
+                    try:
+                        text = page.extract_text()
+                        if text and text.strip():
+                            text_parts.append(text)
+                        else:
+                            # Page might be image-only
+                            text_parts.append(f"[Page {page_num}: No extractable text - possibly image-only]")
+                    except Exception as page_error:
+                        text_parts.append(f"[Page {page_num}: Error extracting text: {str(page_error)}]")
+                
+                # Check if we got any meaningful text
+                full_text = '\n'.join(text_parts)
+                if not full_text.strip() or full_text.count('[Page') == len(reader.pages):
+                    raise ValueError(
+                        "PDF appears to contain only images. OCR is required.\n"
+                        "Consider converting to text first or using an OCR tool."
+                    )
+                
+                return full_text
+                
+        except PyPDF2.errors.PdfReadError as e:
+            raise ValueError(f"Invalid or corrupted PDF file: {str(e)}")
+        except ValueError as e:
+            # Re-raise ValueError with our custom messages
+            raise
         except Exception as e:
-            return f"❌ Error parsing PDF: {str(e)}"
+            raise RuntimeError(f"Unexpected error parsing PDF: {str(e)}")
     
     @staticmethod
     def _parse_docx(path: Path) -> str:
@@ -119,18 +221,40 @@ class DocumentParser:
         try:
             import docx
         except ImportError:
-            return (
-                "❌ Word document parsing requires python-docx.\n"
+            raise ImportError(
+                "Word document parsing requires python-docx.\n"
                 "Install with: pip install python-docx\n"
                 "Or: pip install sota-agent-framework[documents]"
             )
         
         try:
             doc = docx.Document(path)
-            text_parts = [paragraph.text for paragraph in doc.paragraphs]
-            return '\n'.join(text_parts)
+            
+            # Extract paragraphs
+            text_parts = []
+            for paragraph in doc.paragraphs:
+                if paragraph.text.strip():
+                    text_parts.append(paragraph.text)
+            
+            # Also extract text from tables if present
+            for table in doc.tables:
+                for row in table.rows:
+                    row_text = ' | '.join(cell.text.strip() for cell in row.cells if cell.text.strip())
+                    if row_text:
+                        text_parts.append(row_text)
+            
+            # Check if we got any text
+            full_text = '\n'.join(text_parts)
+            if not full_text.strip():
+                raise ValueError("Word document appears to be empty or contains no extractable text.")
+            
+            return full_text
+            
+        except ValueError as e:
+            # Re-raise ValueError with our custom messages
+            raise
         except Exception as e:
-            return f"❌ Error parsing Word document: {str(e)}"
+            raise RuntimeError(f"Error parsing Word document: {str(e)}")
 
 
 class ComplexityLevel(Enum):
@@ -173,69 +297,172 @@ class ArchitectureAdvisor:
     """
     AI-powered architecture advisor that analyzes use case briefs
     and recommends optimal SOTA Agent Framework architecture.
+    
+    Uses intelligent text analysis that:
+    - Focuses on actual requirements, not titles/buzzwords
+    - Weights technical sections higher than marketing language
+    - Analyzes implementation details, not aspirational descriptions
     """
+    
+    @staticmethod
+    def print_capabilities_overview():
+        """Print an overview of all framework levels and their capabilities."""
+        print("\n" + "="*80)
+        print("📚 SOTA Agent Framework - Complexity Levels Overview")
+        print("="*80)
+        print()
+        print("┌─────────┬──────────────────────┬─────────────┬────────────────────────────────┐")
+        print("│  Level  │   Architecture       │   Time      │  Key Capabilities              │")
+        print("├─────────┼──────────────────────┼─────────────┼────────────────────────────────┤")
+        print("│ Level 1 │ Simple Chatbot       │   2-4 hrs   │ • Basic Q&A                    │")
+        print("│         │                      │             │ • FAQ responses                │")
+        print("│         │                      │             │ • No memory                    │")
+        print("├─────────┼──────────────────────┼─────────────┼────────────────────────────────┤")
+        print("│ Level 2 │ Context-Aware        │   4-8 hrs   │ • Session memory               │")
+        print("│         │                      │             │ • Personalization              │")
+        print("│         │                      │             │ • History tracking             │")
+        print("├─────────┼──────────────────────┼─────────────┼────────────────────────────────┤")
+        print("│ Level 3 │ Production API       │  8-16 hrs   │ • High scale (1000s req/sec)   │")
+        print("│         │                      │             │ • 99.9% uptime                 │")
+        print("│         │                      │             │ • Full monitoring              │")
+        print("├─────────┼──────────────────────┼─────────────┼────────────────────────────────┤")
+        print("│ Level 4 │ Complex Workflow     │ 16-32 hrs   │ • Plan-Act-Critique loops      │")
+        print("│         │                      │             │ • Self-improvement             │")
+        print("│         │                      │             │ • Feedback optimization        │")
+        print("├─────────┼──────────────────────┼─────────────┼────────────────────────────────┤")
+        print("│ Level 5 │ Multi-Agent System   │ 32-64 hrs   │ • Multiple autonomous agents   │")
+        print("│         │                      │             │ • Agent-to-agent communication │")
+        print("│         │                      │             │ • Distributed coordination     │")
+        print("└─────────┴──────────────────────┴─────────────┴────────────────────────────────┘")
+        print()
+        print("💡 Each level builds on previous capabilities")
+        print("⚠️  Recommendations are guidance - choose what fits your needs")
+        print("="*80 + "\n")
     
     def __init__(self):
         """Initialize the advisor with pattern matchers and rules."""
         
         # Complexity indicators (patterns that suggest higher complexity)
+        # Focus on implementation requirements, not aspirational buzzwords
         self.complexity_patterns = {
             ComplexityLevel.SIMPLE: [
                 r'\bsimple\b', r'\bbasic\b', r'\bquick\b', r'\bchatbot\b',
-                r'\bfaq\b', r'\bquestion.?answer', r'\brespond\b'
+                r'\bfaq\b', r'\bquestion.?answer', r'\brespond\b',
+                r'\bsingle\s+purpose\b', r'\bstraightforward\b'
             ],
             ComplexityLevel.CONTEXTUAL: [
-                r'\bmemory\b', r'\bcontext\b', r'\bremember\b', r'\bhistory\b',
-                r'\bconversation\b', r'\bmulti.?turn\b', r'\bpersonaliz'
+                r'\bremember\s+.{0,30}(history|context|conversation|preferences|what|topics)',
+                r'\btrack.{0,30}(progress|session|user|student|patient).{0,30}(across|over|throughout)',
+                r'\bpersonaliz',
+                r'\bconversation\s+history\b', r'\bmulti.?turn\b',
+                r'\bstore\s+.{0,20}(data|information|preferences)',
+                r'\bretain\s+.{0,20}information',
+                r'\bcontext\s+(across|throughout)\s+.{0,20}(sessions|conversations|journey)',
+                r'\bmaintain.{0,20}context.{0,20}throughout',
+                r'\badapt.{0,30}based\s+on.{0,30}(their|user|history)'
             ],
             ComplexityLevel.PRODUCTION: [
-                r'\bproduction\b', r'\bapi\b', r'\brest\b', r'\bmicroservice\b',
-                r'\bmonitor', r'\bscale', r'\bhealth.?check\b', r'\bdeploy'
+                r'\bproduction.?grade\b', r'\brest\s+api\b', r'\bmicroservice\b',
+                r'\bmonitor', r'\bscale\s+to\b', r'\bhealth.?check\b',
+                r'\b99\.9+%\s+uptime\b', r'\bload\s+balanc\b',
+                r'\bauthentication\b', r'\bauthorization\b'
             ],
             ComplexityLevel.ADVANCED: [
-                r'\bplan', r'\bworkflow\b', r'\bcomplex\b', r'\bmulti.?step\b',
-                r'\boptimiz', r'\bself.?improv', r'\bfeedback\b', r'\bcritique'
+                r'\bplan\s+.{0,30}execut\w+.{0,30}(critiqu|evaluat|assess)',
+                r'\bmulti.?step\s+.{0,20}(workflow|process|task)',
+                r'\boptimiz\w+\s+.{0,30}(over\s+time|based\s+on|through)',
+                r'\bself.?improv|continuously.?improv|automatically.?improv',
+                r'\bfeedback\s+loop',
+                r'\bcritiqu\w+.{0,30}(result|output|performance)',
+                r'\badaptive\s+(behavior|strateg|approach)',
+                r'\blearn\w+\s+from\s+.{0,30}(mistake|outcome|feedback|result|engagement)',
+                r'\biterat\w+\s+(improve|refine|enhance|adjust)',
+                r'\brevise.{0,20}strateg', r'\b(refine|adjust)\s+.{0,20}(approach|strategy|plan)',
+                r'\bimprove.{0,20}strateg.{0,20}over\s+time',
+                r'\bevaluat\w+.{0,20}(quality|performance).{0,20}(and|then).{0,20}(improv|adjust|refine)'
             ],
             ComplexityLevel.EXPERT: [
-                r'\bmulti.?agent\b', r'\bcollaborat', r'\bdistribut',
-                r'\ba2a\b', r'\bcross.?framework\b', r'\bmarketplace\b',
-                r'\benterprise\b', r'\bscale.?massiv'
+                r'\bmultiple\s+.{0,30}agents?\s+.{0,50}(communicate|collaborate|coordinate)',
+                r'\bagents?\s+.{0,30}(communicate|collaborate|coordinate)\s+.{0,30}(with\s+)?(each\s+other|together)',
+                r'\bagent.?to.?agent',
+                r'\bdistributed\s+.{0,20}(system|agents?|network)', 
+                r'\bpeer.?to.?peer',
+                r'\bagent\s+discovery\b', 
+                r'\bagents?\s+.{0,30}(discover|find)\s+.{0,30}(each\s+other|other\s+agents)',
+                r'\bcross.?platform\s+.{0,30}agents?\b',
+                r'\bdecentralized\s+.{0,30}(coordination|agents?)\b', 
+                r'\bautonomous\s+agents?\s+.{0,30}(collaborate|coordinate|work\s+together)',
+                r'\bagents?\s+.{0,30}request\s+.{0,20}(help|consultation)',
+                r'\bseparate\s+agents?\s+for\b',
+                r'\bspecialized\s+agents?\b.{0,50}(coordinate|collaborate|work\s+together)',
+                r'\bagents?\s+for\s+(different|various)\s+.{0,30}(must|should|need).{0,50}(coordinate|collaborate|communicate)'
             ]
         }
         
-        # Feature indicators
+        # Feature indicators - focus on actual implementation needs
         self.feature_patterns = {
             'memory': [
-                r'\bmemory\b', r'\bremember\b', r'\brecall\b', r'\bforget\b',
-                r'\bcontext\b', r'\bhistory\b'
+                r'\bstore\s+.{0,20}(history|context|data|progress)',
+                r'\bremember\s+.{0,20}(previous|past|earlier|what|topic)',
+                r'\bretain\s+.{0,20}information',
+                r'\btrack\s+.{0,30}(session|user|conversation|progress|student|patient)',
+                r'\bcontext\s+across\s+.{0,20}(sessions|interactions|conversation)',
+                r'\bmaintain.{0,20}context',
+                r'\btrack.{0,20}(weak\s+areas|preferences|history|journey)'
             ],
             'langgraph': [
-                r'\bplan\b', r'\bworkflow\b', r'\bgraph\b', r'\borch',
-                r'\bmulti.?step\b', r'\bsequence\b'
+                r'\bmulti.?step\s+\w+\s+(workflow|process|pipeline)\b',
+                r'\bplan\s+and\s+execute\b', r'\bstate\s+machine\b',
+                r'\borchestrat\w+\s+\w+\s+(tasks|steps)\b',
+                r'\bsequential\s+\w+\s+processing\b',
+                r'\bworkflow\s+\w+\s+(coordination|management)\b'
             ],
             'mcp': [
-                r'\btool\b', r'\bexternal\b', r'\bapi\b', r'\bintegrat',
-                r'\bservice\b', r'\bmcp\b'
+                r'\bexternal\s+\w+\s+(api|service|tool)\b',
+                r'\bintegrat\w+\s+with\s+\w+\s+(third.?party|external)\b',
+                r'\bcall\s+\w+\s+(external|remote)\b',
+                r'\btool\s+\w+\s+interface\b'
             ],
             'a2a': [
-                r'\ba2a\b', r'\bmulti.?agent\b', r'\bcollaborat',
-                r'\bcross.?framework\b', r'\binterop'
+                r'\bagents?\s+.{0,30}(communicate|collaborate|coordinate)\s+.{0,30}(with\s+)?each\s+other',
+                r'\bpeer.?to.?peer',
+                r'\bagent.?to.?agent',
+                r'\bdistributed\s+.{0,20}agents?\b',
+                r'\bagents?\s+.{0,30}discover\s+.{0,30}(each\s+other|other\s+agents)',
+                r'\bcross.?framework\s+.{0,30}(agent|communication)',
+                r'\bagents?\s+.{0,30}request\s+.{0,20}help'
             ],
             'monitoring': [
-                r'\bmonitor\b', r'\bobserv', r'\btelemetry\b', r'\btrace\b',
-                r'\blog\b', r'\bmetric\b'
+                r'\bmonitor\s+\w+\s+(performance|health|metrics)\b',
+                r'\bobservability\s+\w+\s+(platform|system)\b',
+                r'\btrace\s+\w+\s+(execution|requests)\b',
+                r'\btrack\s+\w+\s+(metrics|errors|latency)\b',
+                r'\btelemetry\s+\w+\s+data\b'
             ],
             'optimization': [
-                r'\boptimiz\b', r'\bimprov\b', r'\btune\b', r'\bself.?learn',
-                r'\bfeedback\b', r'\brl\b', r'\breinforce'
+                r'\boptimiz\w+\s+.{0,30}(performance|prompts|responses|strategies|criteria)',
+                r'\bimprov\w+\s+.{0,30}(over\s+time|through|based\s+on|its\s+\w+|strategies)',
+                r'\btune\s+.{0,20}(parameters|models)',
+                r'\bself.?learn\w+\s+from\s+.{0,20}(feedback|data)',
+                r'\bfeedback\s+loop', 
+                r'\badaptive\s+.{0,20}(behavior|strategies|approach)',
+                r'\blearn\s+from\s+.{0,30}(accepted|rejected|performance)',
+                r'\bcontinuously.{0,20}improve',
+                r'\bautomatically.{0,20}adjust',
+                r'\brefine.{0,20}(criteria|strategies|approach).{0,20}over\s+time'
             ],
             'benchmarking': [
-                r'\bbenchmark\b', r'\beval', r'\btest\b', r'\baccuracy\b',
-                r'\bperformance\b', r'\bquality\b'
+                r'\bmeasure\s+\w+\s+(accuracy|performance|quality)\b',
+                r'\beval\w+\s+\w+\s+(model|agent|system)\b',
+                r'\btest\s+\w+\s+(quality|performance)\b',
+                r'\bquality\s+\w+\s+(metrics|assessment)\b'
             ],
             'databricks': [
-                r'\bdatabricks\b', r'\bunity.?catalog\b', r'\bmlflow\b',
-                r'\bspark\b', r'\bdelta\b'
+                r'\bdatabricks\s+\w+\s+(platform|integration|deployment)\b',
+                r'\bunity\s+catalog\s+\w+\s+(for|integration)\b',
+                r'\bmlflow\s+\w+\s+(tracking|registry)\b',
+                r'\bspark\s+\w+\s+(processing|cluster)\b',
+                r'\bdelta\s+lake\s+\w+\s+(storage|tables)\b'
             ]
         }
         
@@ -261,7 +488,9 @@ class ArchitectureAdvisor:
         Returns:
             ArchitectureRecommendation with all details
         """
-        brief_lower = brief.lower()
+        # Step 0: Preprocess the brief to extract meaningful content
+        processed_brief = self._preprocess_brief(brief)
+        brief_lower = processed_brief.lower()
         
         # Step 1: Determine complexity level
         level, level_confidence = self._determine_complexity(brief_lower)
@@ -301,6 +530,80 @@ class ArchitectureAdvisor:
             estimated_hours=estimated_hours,
             generation_params=generation_params
         )
+    
+    def _preprocess_brief(self, brief: str) -> str:
+        """
+        Preprocess brief to focus on actual requirements, not titles/buzzwords.
+        
+        Strategy:
+        - Extract sections with actual requirements (requirements, technical, implementation)
+        - De-weight or remove titles, headers, executive summaries
+        - Focus on concrete descriptions of what needs to be built
+        - Remove aspirational/marketing language
+        """
+        lines = brief.split('\n')
+        processed_lines = []
+        
+        # Markers for high-value sections (actual requirements)
+        high_value_markers = [
+            'requirement', 'technical', 'implementation', 'functionality',
+            'feature', 'must', 'should', 'need', 'will', 'capability',
+            'specification', 'architecture', 'design', 'component'
+        ]
+        
+        # Markers for low-value sections (titles, marketing)
+        low_value_markers = [
+            'executive summary', 'overview', 'introduction', 'background',
+            'vision', 'mission', 'goal', 'objective', 'title', 'brief'
+        ]
+        
+        in_high_value_section = False
+        in_low_value_section = False
+        
+        for line in lines:
+            line_lower = line.lower().strip()
+            
+            # Skip empty lines
+            if not line_lower:
+                continue
+            
+            # Skip very short lines (likely titles/headers)
+            if len(line_lower) < 20 and ':' not in line_lower:
+                # But check if it's a section header
+                if any(marker in line_lower for marker in high_value_markers):
+                    in_high_value_section = True
+                    in_low_value_section = False
+                    continue
+                elif any(marker in line_lower for marker in low_value_markers):
+                    in_low_value_section = True
+                    in_high_value_section = False
+                    continue
+                else:
+                    # Skip standalone short lines (titles)
+                    continue
+            
+            # Skip low-value sections
+            if in_low_value_section and len(line_lower) < 100:
+                # Short lines in low-value sections are skipped
+                continue
+            
+            # Check if line contains high-value content
+            is_high_value = any(marker in line_lower for marker in high_value_markers)
+            is_low_value = any(marker in line_lower for marker in low_value_markers)
+            
+            if is_high_value or in_high_value_section:
+                # Include this line with full weight
+                processed_lines.append(line)
+            elif not is_low_value:
+                # Neutral line - include but maybe de-weight later
+                processed_lines.append(line)
+        
+        # If we didn't find any high-value sections, use original brief
+        # (might be a short, direct description)
+        if len(processed_lines) < 5:
+            return brief
+        
+        return '\n'.join(processed_lines)
     
     def _determine_complexity(self, brief: str) -> Tuple[ComplexityLevel, float]:
         """Determine complexity level from brief."""
@@ -491,7 +794,75 @@ class ArchitectureAdvisor:
         }
         return names[level]
     
-    def print_recommendation(self, rec: ArchitectureRecommendation):
+    def prompt_level_selection(self, recommendation: ArchitectureRecommendation) -> int:
+        """
+        Interactive prompt for level selection with override capability.
+        
+        Returns:
+            Selected level (1-5)
+        """
+        print("\n" + "="*70)
+        print("🎯 Level Selection")
+        print("="*70)
+        print("\nAll available levels:")
+        print()
+        print("  1️⃣  Level 1: Simple Chatbot")
+        print("      ↳ Basic Q&A, FAQ bots, simple responses")
+        print("      ↳ Time: 2-4 hours | Features: None required")
+        print()
+        print("  2️⃣  Level 2: Context-Aware Agent")
+        print("      ↳ Memory, personalization, session tracking")
+        print("      ↳ Time: 4-8 hours | Features: Memory")
+        print()
+        print("  3️⃣  Level 3: Production API")
+        print("      ↳ High scale, monitoring, 24/7 operations")
+        print("      ↳ Time: 8-16 hours | Features: Memory, Monitoring")
+        print()
+        print("  4️⃣  Level 4: Complex Workflow")
+        print("      ↳ Plan-Act-Critique, self-improvement, optimization")
+        print("      ↳ Time: 16-32 hours | Features: LangGraph, Optimization, Memory")
+        print()
+        print("  5️⃣  Level 5: Multi-Agent System")
+        print("      ↳ Multiple agents, A2A communication, distributed")
+        print("      ↳ Time: 32-64 hours | Features: A2A, All advanced features")
+        print()
+        print("="*70)
+        print(f"\n💡 Recommended: Level {recommendation.level.value} (confidence: {recommendation.confidence:.0%})")
+        print()
+        
+        while True:
+            try:
+                choice = input("Select level (1-5) or press Enter for recommended: ").strip()
+                
+                if choice == "":
+                    # Use recommendation
+                    selected = recommendation.level.value
+                    print(f"\n✅ Using recommended Level {selected}")
+                    return selected
+                
+                selected = int(choice)
+                if 1 <= selected <= 5:
+                    if selected != recommendation.level.value:
+                        print(f"\n⚠️  You selected Level {selected}, different from recommendation (Level {recommendation.level.value})")
+                        confirm = input("   Proceed with Level " + str(selected) + "? (y/n): ").strip().lower()
+                        if confirm in ['y', 'yes']:
+                            print(f"\n✅ Using Level {selected}")
+                            return selected
+                        else:
+                            print("\n   Let's choose again...")
+                            continue
+                    else:
+                        print(f"\n✅ Using Level {selected}")
+                        return selected
+                else:
+                    print("   ❌ Please enter a number between 1 and 5")
+            except ValueError:
+                print("   ❌ Please enter a valid number (1-5) or press Enter")
+            except (KeyboardInterrupt, EOFError):
+                print(f"\n\n✅ Using recommended Level {recommendation.level.value}")
+                return recommendation.level.value
+    
+    def print_recommendation(self, rec: ArchitectureRecommendation, show_json: bool = True):
         """Pretty print the recommendation."""
         print("\n" + "="*70)
         print("🏗️  SOTA Agent Framework - Architecture Recommendation")
@@ -499,6 +870,7 @@ class ArchitectureAdvisor:
         
         print(f"\n📊 Recommended Level: {rec.level_name}")
         print(f"   Confidence: {rec.confidence:.0%}")
+        print(f"   ⚠️  This is guidance only - you can choose any level that fits your needs")
         
         print(f"\n📋 Schemas:")
         print(f"   Input:  {rec.input_schema}")
@@ -519,12 +891,29 @@ class ArchitectureAdvisor:
         
         print(f"\n⏱️  Estimated Effort: {rec.estimated_hours}")
         
-        print(f"\n🚀 Next Steps:")
-        print(f"   1. Run: sota-learn start {rec.level.value}")
-        print(f"   2. Or: sota-generate <project_name> --level {rec.level.value}")
-        print(f"   3. Enable features as needed")
+        print("\n" + "="*70)
         
-        print("\n" + "="*70 + "\n")
+        # Show detailed JSON output by default
+        if show_json:
+            print("\n📊 Detailed Analysis (JSON):")
+            print("="*70)
+            import json
+            output = {
+                'level': rec.level.value,
+                'level_name': rec.level_name,
+                'confidence': rec.confidence,
+                'input_schema': rec.input_schema,
+                'output_schema': rec.output_schema,
+                'features': rec.features,
+                'integrations': rec.integrations,
+                'reasoning': rec.reasoning,
+                'estimated_hours': rec.estimated_hours,
+                'generation_params': rec.generation_params
+            }
+            print(json.dumps(output, indent=2))
+            print("="*70)
+        
+        print()
 
 
 def main():
@@ -553,12 +942,17 @@ def main():
     parser.add_argument(
         '-i', '--interactive',
         action='store_true',
-        help='Interactive mode with prompts'
+        help='Interactive mode with prompts for input'
+    )
+    parser.add_argument(
+        '--select',
+        action='store_true',
+        help='Interactive level selection after recommendation'
     )
     parser.add_argument(
         '-j', '--json',
         action='store_true',
-        help='Output as JSON'
+        help='Output as JSON (non-interactive)'
     )
     
     args = parser.parse_args()
@@ -572,22 +966,45 @@ def main():
         try:
             brief = DocumentParser.parse_file(args.file)
             
-            # Check if parsing failed
-            if brief.startswith("❌"):
-                print(brief)
-                sys.exit(1)
-            
             print(f"✅ Extracted {len(brief)} characters")
             
             # Show preview if not JSON output
             if not args.json:
                 preview = brief[:200] + "..." if len(brief) > 200 else brief
                 print(f"\n📋 Document preview:\n{preview}\n")
+                
         except FileNotFoundError as e:
-            print(f"❌ Error: {e}")
+            print(f"\n❌ File Not Found Error:")
+            print(f"   {e}")
+            print(f"\n💡 Tip: Check the file path and ensure the file exists.")
             sys.exit(1)
+            
+        except ImportError as e:
+            print(f"\n❌ Missing Dependency:")
+            print(f"   {e}")
+            print(f"\n💡 Quick Fix:")
+            print(f"   pip install sota-agent-framework[documents]")
+            sys.exit(1)
+            
         except ValueError as e:
-            print(f"❌ Error: {e}")
+            print(f"\n❌ Document Processing Error:")
+            print(f"   {e}")
+            print(f"\n💡 Possible Solutions:")
+            print(f"   - Ensure the document is not corrupted")
+            print(f"   - Try converting to plain text or markdown")
+            print(f"   - Check if the document is password-protected")
+            sys.exit(1)
+            
+        except RuntimeError as e:
+            print(f"\n❌ Unexpected Error:")
+            print(f"   {e}")
+            print(f"\n💡 Please report this issue with the document type and error message.")
+            sys.exit(1)
+            
+        except Exception as e:
+            print(f"\n❌ Unknown Error:")
+            print(f"   {str(e)}")
+            print(f"\n💡 Try converting your document to .txt or .md format first.")
             sys.exit(1)
     elif args.interactive:
         print("\n🏗️  SOTA Agent Framework - Architecture Advisor\n")
@@ -604,11 +1021,16 @@ def main():
         print("❌ Error: Please provide a use case description")
         sys.exit(1)
     
+    # Show capabilities overview (skip in JSON-only mode)
+    if not args.json:
+        ArchitectureAdvisor.print_capabilities_overview()
+    
     # Analyze and recommend
     recommendation = advisor.analyze_brief(brief)
     
     # Output
     if args.json:
+        # JSON-only mode (for automation/scripting)
         import json
         output = {
             'level': recommendation.level.value,
@@ -624,7 +1046,33 @@ def main():
         }
         print(json.dumps(output, indent=2))
     else:
-        advisor.print_recommendation(recommendation)
+        # Human-readable + JSON details (default)
+        advisor.print_recommendation(recommendation, show_json=True)
+        
+        # Interactive level selection
+        selected_level = recommendation.level.value
+        if args.select:
+            selected_level = advisor.prompt_level_selection(recommendation)
+        
+        # Show next steps with selected level
+        print("\n" + "="*70)
+        print("🚀 Next Steps")
+        print("="*70)
+        print(f"\n1️⃣  Start learning at Level {selected_level}:")
+        print(f"   sota-learn start {selected_level}")
+        print()
+        print(f"2️⃣  Generate project scaffold:")
+        print(f"   sota-generate my_project --level {selected_level}")
+        print()
+        print(f"3️⃣  Explore interactively:")
+        print(f"   sota-setup")
+        print()
+        
+        if not args.select:
+            print(f"💡 Tip: Use --select flag for interactive level selection")
+            print(f"   sota-architect --file your_brief.pdf --select")
+        
+        print("="*70 + "\n")
 
 
 if __name__ == '__main__':
