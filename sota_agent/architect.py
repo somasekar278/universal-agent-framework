@@ -10,16 +10,127 @@ SOTA Agent Framework architecture, including:
 - Architecture patterns
 
 Usage:
+    # From text
     sota-architect "I need a fraud detection system with memory and self-improvement"
     
-    Or interactively:
+    # From file
+    sota-architect --file requirements.txt
+    sota-architect --file project_brief.pdf
+    
+    # Interactive
     sota-architect --interactive
 """
 
 import re
+import os
+from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass
 from enum import Enum
+
+
+class DocumentParser:
+    """
+    Parse documents of various formats to extract text for analysis.
+    
+    Supports:
+    - Plain text (.txt)
+    - Markdown (.md)
+    - PDF (.pdf) - requires PyPDF2
+    - Word (.docx, .doc) - requires python-docx
+    """
+    
+    @staticmethod
+    def parse_file(file_path: str) -> str:
+        """
+        Parse a file and extract text content.
+        
+        Args:
+            file_path: Path to the document file
+            
+        Returns:
+            Extracted text content
+            
+        Raises:
+            FileNotFoundError: If file doesn't exist
+            ValueError: If file format is unsupported
+        """
+        path = Path(file_path)
+        
+        if not path.exists():
+            raise FileNotFoundError(f"File not found: {file_path}")
+        
+        suffix = path.suffix.lower()
+        
+        # Plain text and markdown
+        if suffix in ['.txt', '.md', '.markdown', '.rst']:
+            return DocumentParser._parse_text(path)
+        
+        # PDF
+        elif suffix == '.pdf':
+            return DocumentParser._parse_pdf(path)
+        
+        # Word documents
+        elif suffix in ['.docx', '.doc']:
+            return DocumentParser._parse_docx(path)
+        
+        else:
+            raise ValueError(
+                f"Unsupported file format: {suffix}\n"
+                f"Supported: .txt, .md, .pdf, .docx, .doc"
+            )
+    
+    @staticmethod
+    def _parse_text(path: Path) -> str:
+        """Parse plain text or markdown file."""
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except UnicodeDecodeError:
+            # Try with different encoding
+            with open(path, 'r', encoding='latin-1') as f:
+                return f.read()
+    
+    @staticmethod
+    def _parse_pdf(path: Path) -> str:
+        """Parse PDF file (requires PyPDF2)."""
+        try:
+            import PyPDF2
+        except ImportError:
+            return (
+                "❌ PDF parsing requires PyPDF2.\n"
+                "Install with: pip install PyPDF2\n"
+                "Or: pip install sota-agent-framework[documents]"
+            )
+        
+        try:
+            text_parts = []
+            with open(path, 'rb') as f:
+                reader = PyPDF2.PdfReader(f)
+                for page in reader.pages:
+                    text_parts.append(page.extract_text())
+            return '\n'.join(text_parts)
+        except Exception as e:
+            return f"❌ Error parsing PDF: {str(e)}"
+    
+    @staticmethod
+    def _parse_docx(path: Path) -> str:
+        """Parse Word document (requires python-docx)."""
+        try:
+            import docx
+        except ImportError:
+            return (
+                "❌ Word document parsing requires python-docx.\n"
+                "Install with: pip install python-docx\n"
+                "Or: pip install sota-agent-framework[documents]"
+            )
+        
+        try:
+            doc = docx.Document(path)
+            text_parts = [paragraph.text for paragraph in doc.paragraphs]
+            return '\n'.join(text_parts)
+        except Exception as e:
+            return f"❌ Error parsing Word document: {str(e)}"
 
 
 class ComplexityLevel(Enum):
@@ -423,12 +534,21 @@ def main():
     
     parser = argparse.ArgumentParser(
         description='SOTA Agent Framework Architecture Advisor',
-        epilog='Example: sota-architect "Build a fraud detection system with memory"'
+        epilog='Examples:\n'
+               '  sota-architect "Build a fraud detection system"\n'
+               '  sota-architect --file requirements.txt\n'
+               '  sota-architect --file project_brief.pdf',
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
         'brief',
         nargs='*',
         help='Natural language description of your use case'
+    )
+    parser.add_argument(
+        '-f', '--file',
+        type=str,
+        help='Path to document file (.txt, .md, .pdf, .docx, .doc)'
     )
     parser.add_argument(
         '-i', '--interactive',
@@ -446,7 +566,30 @@ def main():
     advisor = ArchitectureAdvisor()
     
     # Get brief
-    if args.interactive:
+    if args.file:
+        # Parse document file
+        print(f"\n📄 Parsing document: {args.file}")
+        try:
+            brief = DocumentParser.parse_file(args.file)
+            
+            # Check if parsing failed
+            if brief.startswith("❌"):
+                print(brief)
+                sys.exit(1)
+            
+            print(f"✅ Extracted {len(brief)} characters")
+            
+            # Show preview if not JSON output
+            if not args.json:
+                preview = brief[:200] + "..." if len(brief) > 200 else brief
+                print(f"\n📋 Document preview:\n{preview}\n")
+        except FileNotFoundError as e:
+            print(f"❌ Error: {e}")
+            sys.exit(1)
+        except ValueError as e:
+            print(f"❌ Error: {e}")
+            sys.exit(1)
+    elif args.interactive:
         print("\n🏗️  SOTA Agent Framework - Architecture Advisor\n")
         print("Describe your use case in natural language, and I'll recommend")
         print("the optimal architecture from our framework.\n")

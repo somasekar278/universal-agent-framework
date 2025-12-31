@@ -27,10 +27,14 @@ pip install sota-agent-framework[optimization]  # DSPy + TextGrad
 
 **🤖 Have a Use Case? (NEW! - AI-Powered)**
 ```bash
+# From text
 sota-architect "Build a fraud detection system with memory and self-improvement"
+
+# From document (txt, md, pdf, docx)
+sota-architect --file requirements.txt
 # → Instant architecture recommendation: Level, schemas, features, integrations!
 ```
-Describe your use case in natural language, get instant architecture recommendations.
+Describe your use case in natural language or provide a document, get instant recommendations.
 
 **🎓 Want to Learn? (NEW!)**
 ```bash

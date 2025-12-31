@@ -120,9 +120,15 @@ ui = [
     "ipython>=8.0.0",
 ]
 
+# Document parsing (for sota-architect --file)
+documents = [
+    "PyPDF2>=3.0.0",
+    "python-docx>=0.8.11",
+]
+
 # All features
 all = [
-    "sota-agent-framework[databricks,agent-frameworks,optimization,ray,mcp,a2a,semantic-search,messaging,telemetry,web,ui,monitoring]",
+    "sota-agent-framework[databricks,agent-frameworks,optimization,ray,mcp,a2a,semantic-search,messaging,telemetry,web,ui,monitoring,documents]",
 ]
 
 # Development tools

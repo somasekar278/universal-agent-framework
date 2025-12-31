@@ -26,6 +26,29 @@ The **Architecture Advisor** (`sota-architect`) is an intelligent system that an
 sota-architect "Build a fraud detection system with memory and self-improvement"
 ```
 
+### From Document File (NEW!)
+
+```bash
+# Parse and analyze a document
+sota-architect --file requirements.txt
+sota-architect --file project_brief.md
+sota-architect --file use_case.pdf
+sota-architect --file proposal.docx
+```
+
+**Supported formats:**
+- Plain text (`.txt`)
+- Markdown (`.md`, `.markdown`)
+- PDF (`.pdf`) - requires `PyPDF2`
+- Word (`.docx`, `.doc`) - requires `python-docx`
+
+**Install document parsing:**
+```bash
+pip install sota-agent-framework[documents]
+# Or
+pip install PyPDF2 python-docx
+```
+
 ### Interactive Mode
 
 ```bash
@@ -38,6 +61,9 @@ sota-architect --interactive
 ```bash
 # Get machine-readable output
 sota-architect "Simple customer support chatbot" --json
+
+# Also works with files
+sota-architect --file brief.txt --json
 ```
 
 ---
@@ -256,6 +282,85 @@ sota-architect "Enterprise multi-agent system with A2A protocol for cross-framew
    Recommended integrations: MCP, A2A, Databricks, LangGraph
 
 ⏱️  Estimated Effort: 32-80 hours
+```
+
+---
+
+## Document Parsing Examples
+
+### Example: Project Requirements Document
+
+**File: `requirements.txt`**
+```
+Project: Healthcare Diagnostic Assistant
+
+Requirements:
+- Analyze patient symptoms
+- Remember patient history
+- Real-time medical database access
+- Production-grade reliability
+- HIPAA compliance
+- Health monitoring
+```
+
+**Command:**
+```bash
+sota-architect --file requirements.txt
+```
+
+**Output:**
+```
+📄 Parsing document: requirements.txt
+✅ Extracted 234 characters
+
+📊 Recommended Level: Level 3: Production API
+   Input:  APIRequest
+   Output: APIResponse
+   Features: memory, monitoring, mcp
+   Domain: Healthcare
+   Effort: 8-16 hours
+```
+
+### Example: Markdown Project Brief
+
+**File: `project_brief.md`**
+```markdown
+# Multi-Agent Trading System
+
+## Overview
+Enterprise trading system with multiple specialized agents.
+
+## Features
+- Multi-agent collaboration with A2A protocol
+- Databricks integration for data processing
+- Self-improving algorithms
+- Advanced workflow orchestration
+```
+
+**Command:**
+```bash
+sota-architect --file project_brief.md --json
+```
+
+### Example: PDF Proposal
+
+```bash
+# Parse PDF business proposal
+sota-architect --file business_proposal.pdf
+
+# Extract architecture requirements from PDF RFP
+sota-architect --file rfp_document.pdf --json > analysis.json
+```
+
+### Example: Word Document
+
+```bash
+# Parse Word document
+sota-architect --file technical_spec.docx
+
+# Use in automation pipeline
+LEVEL=$(sota-architect --file spec.docx --json | jq -r '.level')
+sota-learn start $LEVEL
 ```
 
 ---
@@ -505,16 +610,38 @@ sota-architect "Contract analysis system with clause extraction, risk scoring, a
 
 ```bash
 # Basic usage
-sota-architect <brief>
+sota-architect <brief>              # Text brief via CLI
+sota-architect --file <path>        # Parse document file
+sota-architect --interactive        # Interactive mode
+sota-architect <brief> --json       # JSON output
 
 # Flags
+--file <path>, -f    # Path to document (.txt, .md, .pdf, .docx)
 --interactive, -i    # Interactive mode with prompts
 --json, -j           # Output as JSON
 
 # Examples
 sota-architect "Simple chatbot"
+sota-architect --file requirements.txt
+sota-architect --file brief.pdf --json
 sota-architect --interactive
 sota-architect "Multi-agent system" --json
+
+# Automation pipeline
+sota-architect --file spec.md --json | jq -r '.level' | xargs sota-learn start
+```
+
+### Installation for Document Parsing
+
+```bash
+# Full installation with document parsing
+pip install sota-agent-framework[all]
+
+# Or just document parsing
+pip install sota-agent-framework[documents]
+
+# Or manual
+pip install PyPDF2 python-docx
 ```
 
 ---
