@@ -37,12 +37,19 @@
   - Agent Benchmarking
 
 ### Deploy to Production
-- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - 🚀 **NEW** Deploy your agent solutions:
+- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - 🚀 Deploy your agent solutions:
   - Docker & Docker Compose
   - Kubernetes (with HPA)
-  - Databricks (Jobs & Model Serving)
   - Serverless (AWS Lambda, GCP Functions)
   - CI/CD Pipelines (GitHub Actions)
+- **[docs/DATABRICKS_DEPLOYMENT.md](docs/DATABRICKS_DEPLOYMENT.md)** - 🧱 **COMPREHENSIVE** Databricks-native deployment:
+  - Databricks Apps (hot pools)
+  - Model Serving (always-on)
+  - Unity Catalog integration
+  - Vector Search (Lakebase)
+  - OTEL → ZeroBus → Delta monitoring
+  - Offline prompt optimization
+  - Complete production architecture
 
 ---
 
@@ -106,7 +113,7 @@
 | **Get architecture recommendations** | [ARCHITECTURE_ADVISOR.md](docs/ARCHITECTURE_ADVISOR.md) |
 | **Add MCP tool calling** | [INTEGRATIONS.md](docs/INTEGRATIONS.md)#mcp |
 | **Use LangGraph workflows** | [INTEGRATIONS.md](docs/INTEGRATIONS.md)#langgraph |
-| **Deploy to Databricks** | [INTEGRATIONS.md](docs/INTEGRATIONS.md)#databricks |
+| **Deploy to Databricks** | [DATABRICKS_DEPLOYMENT.md](docs/DATABRICKS_DEPLOYMENT.md) ⭐ |
 | **Add agent memory** | [ADVANCED_FEATURES.md](docs/ADVANCED_FEATURES.md)#memory |
 | **Optimize reasoning** | [ADVANCED_FEATURES.md](docs/ADVANCED_FEATURES.md)#reasoning |
 | **Optimize prompts with DSPy/TextGrad** | [ADVANCED_FEATURES.md](docs/ADVANCED_FEATURES.md)#optimization |
