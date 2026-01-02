@@ -12,7 +12,7 @@ A universal template for integrating AI agents into applications and data pipeli
 
 ```bash
 # Install from PyPI (easiest!)
-pip install agent-framework
+pip install sota-agent-framework
 
 # Or install from GitHub
 pip install git+https://github.com/somasekar278/universal-agent-template.git

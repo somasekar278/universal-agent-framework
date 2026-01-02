@@ -1,4 +1,4 @@
-[![PyPI](https://img.shields.io/pypi/v/agent-framework)](https://pypi.org/project/agent-framework/)
+[![PyPI](https://img.shields.io/pypi/v/sota-agent-framework)](https://pypi.org/project/sota-agent-framework/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 # Agent Framework
@@ -15,12 +15,12 @@ Build intelligent agents with memory, reasoning, optimization, and seamless Data
 
 ```bash
 # Basic (core features only)
-pip install agent-framework
+pip install sota-agent-framework
 
 # With features you need
-pip install agent-framework[all]  # Everything
-pip install agent-framework[databricks]  # Databricks integration
-pip install agent-framework[optimization]  # DSPy + TextGrad
+pip install sota-agent-framework[all]  # Everything
+pip install sota-agent-framework[databricks]  # Databricks integration
+pip install sota-agent-framework[optimization]  # DSPy + TextGrad
 ```
 
 ### Choose Your Path
@@ -266,7 +266,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## 🔗 Links
 
-- **PyPI**: https://pypi.org/project/agent-framework/
+- **PyPI**: https://pypi.org/project/sota-agent-framework/
 - **GitHub**: https://github.com/somasekar278/universal-agent-template
 - **Documentation**: [DOCUMENTATION_MAP.md](DOCUMENTATION_MAP.md)
 

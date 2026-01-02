@@ -40,7 +40,7 @@ The [Agent2Agent (A2A) Protocol](https://github.com/a2aproject/A2A) is an open p
 
 ```bash
 # Install with A2A support
-pip install agent-framework[a2a]
+pip install sota-agent-framework[a2a]
 ```
 
 ### Exposing Agents via A2A
@@ -175,7 +175,7 @@ Our integration wraps the official SDK and integrates it seamlessly with Agent F
 
 ```bash
 # Install with MCP support
-pip install agent-framework[mcp]
+pip install sota-agent-framework[mcp]
 ```
 
 ### Usage
@@ -230,7 +230,7 @@ See `mcp-servers/` directory for examples.
 
 ```bash
 # Install with LangGraph support
-pip install agent-framework[agent-frameworks]
+pip install sota-agent-framework[agent-frameworks]
 ```
 
 ### Usage
@@ -289,7 +289,7 @@ langgraph:
 
 ```bash
 # Install with Databricks support
-pip install agent-framework[databricks]
+pip install sota-agent-framework[databricks]
 ```
 
 ### Features
@@ -425,10 +425,10 @@ if "DATABRICKS_RUNTIME_VERSION" in os.environ:
 
 | Integration | Install Command | Optional Features |
 |-------------|----------------|-------------------|
-| **MCP** | `pip install agent-framework[mcp]` | Tool calling |
-| **LangGraph** | `pip install agent-framework[agent-frameworks]` | Orchestration |
-| **Databricks** | `pip install agent-framework[databricks]` | UC, MLflow, Viz |
-| **All** | `pip install agent-framework[all]` | Everything |
+| **MCP** | `pip install sota-agent-framework[mcp]` | Tool calling |
+| **LangGraph** | `pip install sota-agent-framework[agent-frameworks]` | Orchestration |
+| **Databricks** | `pip install sota-agent-framework[databricks]` | UC, MLflow, Viz |
+| **All** | `pip install sota-agent-framework[all]` | Everything |
 
 ---
 

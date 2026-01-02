@@ -319,7 +319,7 @@ optimization:
 
 ```bash
 # Install with benchmarking
-pip install agent-framework[dev]
+pip install sota-agent-framework[dev]
 
 # Run benchmarks
 agent-benchmark run --suite fraud_detection --report md

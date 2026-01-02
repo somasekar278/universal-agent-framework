@@ -17,7 +17,7 @@ The Agent Framework includes full LangGraph integration, providing:
 ### **Installation**
 
 ```bash
-pip install agent-framework[agent-frameworks]
+pip install sota-agent-framework[agent-frameworks]
 ```
 
 This installs:

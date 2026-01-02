@@ -22,10 +22,10 @@ The Agent Framework includes a **production-grade reasoning optimization system*
 
 ```bash
 # With optimization features
-pip install agent-framework[optimization]
+pip install sota-agent-framework[optimization]
 
 # Everything
-pip install agent-framework[all]
+pip install sota-agent-framework[all]
 ```
 
 ### Basic Usage
@@ -596,6 +596,6 @@ class DistillWithDSPy(CoTDistiller):
 **Ready to optimize your agents?** Install now:
 
 ```bash
-pip install agent-framework[optimization]
+pip install sota-agent-framework[optimization]
 ```
 

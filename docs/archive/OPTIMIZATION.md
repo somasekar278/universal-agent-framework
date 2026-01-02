@@ -56,10 +56,10 @@ The optimization module provides:
 
 ```bash
 # Install with optimization support
-pip install agent-framework[optimization]
+pip install sota-agent-framework[optimization]
 
 # Or install all features
-pip install agent-framework[all]
+pip install sota-agent-framework[all]
 ```
 
 ### Basic Usage

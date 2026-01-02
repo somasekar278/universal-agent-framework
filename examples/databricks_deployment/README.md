@@ -47,7 +47,7 @@ pip install databricks-cli databricks-sdk
 databricks configure --token
 
 # Install framework
-pip install agent-framework[databricks]
+pip install sota-agent-framework[databricks]
 ```
 
 ### 2. Set Up Infrastructure

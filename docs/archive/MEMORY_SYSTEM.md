@@ -26,13 +26,13 @@ The Agent Framework includes a **production-grade memory system** where **agents
 
 ```bash
 # Basic memory system
-pip install agent-framework
+pip install sota-agent-framework
 
 # With semantic search
-pip install agent-framework[semantic-search]
+pip install sota-agent-framework[semantic-search]
 
 # Everything
-pip install agent-framework[all]
+pip install sota-agent-framework[all]
 ```
 
 ### Basic Usage
@@ -823,6 +823,6 @@ embedder = SentenceTransformerEmbeddings(
 **Ready to use agent-governed memory?** Install now:
 
 ```bash
-pip install agent-framework[semantic-search]
+pip install sota-agent-framework[semantic-search]
 ```
 

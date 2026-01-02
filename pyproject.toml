@@ -144,10 +144,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/your-org/sota-agent-framework"
-Documentation = "https://github.com/your-org/sota-agent-framework/tree/main/docs"
-Repository = "https://github.com/your-org/sota-agent-framework"
-Issues = "https://github.com/your-org/sota-agent-framework/issues"
+Homepage = "https://github.com/somasekar278/universal-agent-template"
+Documentation = "https://github.com/somasekar278/universal-agent-template/tree/main/docs"
+Repository = "https://github.com/somasekar278/universal-agent-template"
+Issues = "https://github.com/somasekar278/universal-agent-template/issues"
+PyPI = "https://pypi.org/project/sota-agent-framework/"
 
 [tool.setuptools]
 packages.find = {where = ["."], include = ["agents*", "shared*", "sota_agent*", "orchestration*", "evaluation*", "memory*", "reasoning*", "optimization*", "visualization*", "telemetry*", "uc_registry*", "infra*", "experiments*", "monitoring*", "services*"]}

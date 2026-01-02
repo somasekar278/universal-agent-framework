@@ -1625,7 +1625,7 @@ databricks configure --token
 # Enter workspace URL and personal access token
 
 # 3. Install framework with Databricks extras
-pip install agent-framework[databricks]
+pip install sota-agent-framework[databricks]
 ```
 
 ### Step 1: Set Up Unity Catalog

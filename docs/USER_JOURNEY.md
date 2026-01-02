@@ -14,7 +14,7 @@
 
 ```bash
 # Install framework
-pip install agent-framework[all]
+pip install sota-agent-framework[all]
 
 # Run interactive setup wizard
 agent-setup
@@ -95,7 +95,7 @@ open docs/GETTING_STARTED.md
 ### **Step 1: Quick Setup**
 
 ```bash
-pip install agent-framework[all]
+pip install sota-agent-framework[all]
 
 # Generate with recommended preset
 agent-generate --domain fraud_detection --output ./fraud-agent
@@ -180,7 +180,7 @@ agent-benchmark run --suite my_suite
 
 ```bash
 # Install only what you need
-pip install agent-framework
+pip install sota-agent-framework
 
 # Generate minimal project
 agent-generate --domain my_domain --minimal

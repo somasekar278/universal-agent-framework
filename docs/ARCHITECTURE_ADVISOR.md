@@ -44,7 +44,7 @@ agent-architect --file proposal.docx
 
 **Install document parsing:**
 ```bash
-pip install agent-framework[documents]
+pip install sota-agent-framework[documents]
 # Or
 pip install PyPDF2 python-docx
 ```
@@ -635,10 +635,10 @@ agent-architect --file spec.md --json | jq -r '.level' | xargs agent-learn start
 
 ```bash
 # Full installation with document parsing
-pip install agent-framework[all]
+pip install sota-agent-framework[all]
 
 # Or just document parsing
-pip install agent-framework[documents]
+pip install sota-agent-framework[documents]
 
 # Or manual
 pip install PyPDF2 python-docx

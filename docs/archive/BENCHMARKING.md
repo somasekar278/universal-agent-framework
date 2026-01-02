@@ -22,7 +22,7 @@ The Agent Framework includes a **production-grade benchmarking system** that pro
 ### 1. Install with Benchmarking Support
 
 ```bash
-pip install agent-framework[dev]
+pip install sota-agent-framework[dev]
 ```
 
 ### 2. Run Your First Benchmark
@@ -502,7 +502,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install agent-framework[dev]
+          pip install sota-agent-framework[dev]
       
       - name: Run benchmarks
         run: |
@@ -680,7 +680,7 @@ Open `benchmark_results/benchmark_report.html` in browser.
 **Issue:** Module import failures
 
 **Solution:**
-- Install framework: `pip install agent-framework[dev]`
+- Install framework: `pip install sota-agent-framework[dev]`
 - Ensure agents can import required modules
 - Check PYTHONPATH if using custom structure
 
